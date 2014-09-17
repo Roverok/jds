@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 /* Define client version here */
-#define BTS_CLIENT_VERSION                                  "Dry Run NN"
+#define BTS_CLIENT_VERSION                                  "Dry Run 01"
 
 /* Comment out this line for a non-test network */
 #define BTS_TEST_NETWORK
