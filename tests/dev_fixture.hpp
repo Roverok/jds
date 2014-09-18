@@ -169,44 +169,42 @@ struct chain_fixture
       fc::json::save_to_file( config, clienta_dir.path() / "genesis.json" );
       fc::json::save_to_file( config, clientb_dir.path() / "genesis.json" );
 
-      clienta = std::make_shared<client>(sim_network);
+      clienta = std::make_shared<bts::client::client>(sim_network);
       clienta->open( clienta_dir.path(), clienta_dir.path() / "genesis.json" );
       clienta->configure_from_command_line( 0, nullptr );
       clienta->set_daemon_mode(true);
       clienta->start();
       ilog( "... " );
 
-      clientb = std::make_shared<client>(sim_network);
+      clientb = std::make_shared<bts::client::client>(sim_network);
       clientb->open( clientb_dir.path(), clientb_dir.path() / "genesis.json" );
       clientb->configure_from_command_line( 0, nullptr );
       clientb->set_daemon_mode(true);
       clientb->start();
       ilog( "... " );
 
+      enable_logging();
       exec(clienta, "wallet_create walleta masterpassword 123456ddddaxxx123456789012345678901234567890");
-      exec(clienta, "wallet_delegate_set_transaction_scanning true");
+      exec(clienta, "wallet_set_automatic_backups false");
+      exec(clienta, "wallet_set_transaction_scanning true");
       exec(clienta, "wallet_unlock 99999999999 masterpassword");
 
       exec(clientb, "wallet_create walletb masterpassword 123456a123456789012345678901234567890");
-      exec(clientb, "wallet_delegate_set_transaction_scanning true");
+      exec(clientb, "wallet_set_automatic_backups false");
+      exec(clientb, "wallet_set_transaction_scanning true");
       exec(clientb, "wallet_unlock 99999999999 masterpassword");
 
       int even = 0;
       for( auto key : delegate_private_keys )
       {
-         if( even >= 20 )
+         if( (even++)%2 )
          {
-            if( (even++)%2 )
-            {
-                exec( clienta, "wallet_import_private_key " + key_to_wif( key  ) ); 
-            }
-            else
-            {
-                exec( clientb, "wallet_import_private_key " + key_to_wif( key  ) ); 
-            }
-            if( even >= 34 ) break;
+             exec( clienta, "wallet_import_private_key " + key_to_wif( key  ) );
          }
-         else ++even;
+         else
+         {
+             exec( clientb, "wallet_import_private_key " + key_to_wif( key  ) );
+         }
       }
       
       } catch ( const fc::exception& e )
@@ -235,6 +233,7 @@ struct chain_fixture
       auto b = my_client->get_chain()->generate_block(*next_block_time);
       my_client->get_wallet()->sign_block( b );
       my_client->get_node()->broadcast( bts::client::block_message( b ) );
+      fc::usleep( fc::microseconds( 2000 ) );
       FC_ASSERT( head_num+1 == my_client->get_chain()->get_head_block_num() );
       bts::blockchain::advance_time( 7 );
    }
@@ -254,7 +253,7 @@ struct chain_fixture
    {
    }
 
-   void exec( std::shared_ptr<client> c, const string& command_to_run )
+   void exec( std::shared_ptr<bts::client::client> c, const string& command_to_run )
    {
       if( c == clienta )
          console->print( "A: " + command_to_run + "\n", fc::console_appender::color::blue );
@@ -267,8 +266,8 @@ struct chain_fixture
 
    std::shared_ptr<bts::net::simulated_network> sim_network;
    std::shared_ptr<bts::net::simulated_network> sim_network_fork;
-   std::shared_ptr<client>        clienta;
-   std::shared_ptr<client>        clientb;
+   std::shared_ptr<bts::client::client>        clienta;
+   std::shared_ptr<bts::client::client>        clientb;
    fc::temp_directory             clienta_dir;
    fc::temp_directory             clientb_dir;
    vector<fc::ecc::private_key>   delegate_private_keys;

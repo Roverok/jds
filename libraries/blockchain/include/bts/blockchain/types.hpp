@@ -7,8 +7,8 @@
 
 #include <functional>
 
-namespace fc { 
-   class path; 
+namespace fc {
+   class path;
    class microseconds;
    class time_point;
    class time_point_sec;
@@ -20,19 +20,17 @@ namespace bts { namespace blockchain {
    typedef fc::ripemd160                      transaction_id_type;
    typedef fc::ripemd160                      public_key_hash_type;
    typedef fc::ripemd160                      secret_hash_type;
+   typedef fc::ripemd160                      order_id_type;
    typedef fc::sha256                         digest_type;
-   typedef std::vector<transaction_id_type>   transaction_ids;
    typedef fc::ecc::compact_signature         signature_type;
    typedef fc::ecc::private_key               private_key_type;
    typedef address                            balance_id_type;
    typedef fc::signed_int                     asset_id_type;
    typedef fc::signed_int                     account_id_type;
+   typedef fc::signed_int                     feed_id_type;
    typedef fc::signed_int                     proposal_id_type;
-   typedef uint32_t                           tapos_type; 
    typedef int64_t                            share_type;
-   typedef int64_t                            bip_type;
    typedef uint64_t                           slate_id_type;
-   typedef fc::optional<fc::ecc::private_key> oprivate_key;
    typedef transaction_id_type                dice_id_type;
 
    using std::string;
@@ -55,7 +53,7 @@ namespace bts { namespace blockchain {
    using fc::unsigned_int;
    using fc::signed_int;
 
-   struct public_key_type 
+   struct public_key_type
    {
        struct binary_key
        {
@@ -65,7 +63,7 @@ namespace bts { namespace blockchain {
        };
 
        fc::ecc::public_key_data key_data;
- 
+
        public_key_type();
        public_key_type( const fc::ecc::public_key_data& data );
        public_key_type( const fc::ecc::public_key& pubkey );
@@ -108,7 +106,8 @@ namespace bts { namespace blockchain {
        enum alert_level_enum {
            green = 0,
            yellow = 1,
-           red = 2
+           red = 2,
+           grey = 3
        };
        alert_level_enum    alert_level;
        uint32_t            estimated_confirmation_seconds;
@@ -127,5 +126,5 @@ namespace fc
 FC_REFLECT( bts::blockchain::proposal_vote_id_type, (proposal_id)(delegate_id) )
 FC_REFLECT( bts::blockchain::public_key_type, (key_data) )
 FC_REFLECT( bts::blockchain::public_key_type::binary_key, (data)(check) );
-FC_REFLECT_ENUM( bts::blockchain::blockchain_security_state::alert_level_enum, (green)(yellow)(red) );
+FC_REFLECT_ENUM( bts::blockchain::blockchain_security_state::alert_level_enum, (green)(yellow)(red)(grey) );
 FC_REFLECT( bts::blockchain::blockchain_security_state, (alert_level)(estimated_confirmation_seconds)(participation_rate) )

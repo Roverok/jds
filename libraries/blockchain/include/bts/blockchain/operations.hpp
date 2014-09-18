@@ -1,4 +1,4 @@
-#pragma once 
+#pragma once
 
 #include <fc/io/enum_type.hpp>
 #include <fc/io/raw.hpp>
@@ -18,44 +18,49 @@ namespace bts { namespace blockchain {
 
    enum operation_type_enum
    {
-      null_op_type                = 0,
+      null_op_type                  = 0,
 
       /** balance operations */
-      withdraw_op_type            = 1,
-      deposit_op_type             = 2,
+      withdraw_op_type              = 1,
+      deposit_op_type               = 2,
 
       /** account operations */
-      register_account_op_type    = 3,
-      update_account_op_type      = 4,
-      withdraw_pay_op_type        = 5,
+      register_account_op_type      = 3,
+      update_account_op_type        = 4,
+      withdraw_pay_op_type          = 5,
 
       /** asset operations */
-      create_asset_op_type        = 6,
-      update_asset_op_type        = 7,
-      issue_asset_op_type         = 8,
+      create_asset_op_type          = 6,
+      update_asset_op_type          = 7,
+      issue_asset_op_type           = 8,
 
       /** delegate operations */
-      fire_delegate_op_type       = 9,
+      fire_delegate_op_type         = 9,
 
       /** proposal operations */
-      submit_proposal_op_type     = 10,
-      vote_proposal_op_type       = 11,
+      submit_proposal_op_type       = 10,
+      vote_proposal_op_type         = 11,
 
       /** market operations */
-      bid_op_type                 = 12,
-      ask_op_type                 = 13,
-      short_op_type               = 14,
-      cover_op_type               = 15,
-      add_collateral_op_type      = 16,
-      remove_collateral_op_type   = 17,
+       
+      bid_op_type                   = 12,
+      ask_op_type                   = 13,
+      short_op_type                 = 14,
+      cover_op_type                 = 15,
+      add_collateral_op_type        = 16,
+      remove_collateral_op_type     = 17,
 
       define_delegate_slate_op_type = 18,
-       
-       dice_op_type               = 19
+
+      update_feed_op_type           = 19,
+      burn_op_type                  = 20,
+      link_account_op_type          = 21,
+
+      dice_op_type                  = 22
    };
 
    /**
-    *  A poly-morphic operator that modifies the blockchain database 
+    *  A poly-morphic operator that modifies the blockchain database
     *  is some manner.
     */
    struct operation
@@ -108,11 +113,11 @@ FC_REFLECT_ENUM( bts::blockchain::operation_type_enum,
                  (null_op_type)
                  (withdraw_op_type)
                  (deposit_op_type)
-                 (create_asset_op_type)
-                 (update_asset_op_type)
-                 (withdraw_pay_op_type)
                  (register_account_op_type)
                  (update_account_op_type)
+                 (withdraw_pay_op_type)
+                 (create_asset_op_type)
+                 (update_asset_op_type)
                  (issue_asset_op_type)
                  (submit_proposal_op_type)
                  (vote_proposal_op_type)
@@ -123,11 +128,14 @@ FC_REFLECT_ENUM( bts::blockchain::operation_type_enum,
                  (add_collateral_op_type)
                  (remove_collateral_op_type)
                  (define_delegate_slate_op_type)
+                 (update_feed_op_type)
+                 (burn_op_type)
+                 (link_account_op_type)
                  (dice_op_type)
-               )
+                 )
 
 FC_REFLECT( bts::blockchain::operation, (type)(data) )
- 
+
 namespace fc {
    void to_variant( const bts::blockchain::operation& var,  variant& vo );
    void from_variant( const variant& var,  bts::blockchain::operation& vo );

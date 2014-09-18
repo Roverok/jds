@@ -7,18 +7,14 @@ namespace bts { namespace blockchain {
    {
    }
 
-   uint32_t pending_chain_state::get_head_block_num() const
+   pending_chain_state::~pending_chain_state()
    {
-        auto state = _prev_state.lock();
-        return state->get_head_block_num();
    }
 
-   fc::ripemd160  pending_chain_state::get_current_random_seed()const
+   /** polymorphically allcoate a new state */
+   chain_interface_ptr pending_chain_state::create( const chain_interface_ptr& prev_state )const
    {
-      chain_interface_ptr prev_state = _prev_state.lock();
-      if( prev_state ) 
-         return prev_state->get_current_random_seed();
-      return fc::ripemd160();
+      return std::make_shared<pending_chain_state>( prev_state );
    }
 
    void pending_chain_state::set_prev_state( chain_interface_ptr prev_state )
@@ -26,7 +22,26 @@ namespace bts { namespace blockchain {
       _prev_state = prev_state;
    }
 
-   pending_chain_state::~pending_chain_state(){}
+   uint32_t pending_chain_state::get_head_block_num()const
+   {
+      const chain_interface_ptr prev_state = _prev_state.lock();
+      FC_ASSERT( prev_state );
+      return prev_state->get_head_block_num();
+   }
+
+   fc::time_point_sec pending_chain_state::now()const
+   {
+      const chain_interface_ptr prev_state = _prev_state.lock();
+      FC_ASSERT( prev_state );
+      return prev_state->now();
+   }
+
+   fc::ripemd160 pending_chain_state::get_current_random_seed()const
+   {
+      const chain_interface_ptr prev_state = _prev_state.lock();
+      FC_ASSERT( prev_state );
+      return prev_state->get_current_random_seed();
+   }
 
    /**
     *  Based upon the current state of the database, calculate any updates that
@@ -38,12 +53,6 @@ namespace bts { namespace blockchain {
       /** execute order matching */
    }
 
-   /** polymorphically allcoate a new state */
-   chain_interface_ptr pending_chain_state::create( const chain_interface_ptr& prev_state )const
-   {
-      return std::make_shared<pending_chain_state>(prev_state);
-   }
-
    /** Apply changes from this pending state to the previous state */
    void pending_chain_state::apply_changes()const
    {
@@ -53,8 +62,10 @@ namespace bts { namespace blockchain {
       for( const auto& item : assets )          prev_state->store_asset_record( item.second );
       for( const auto& item : accounts )        prev_state->store_account_record( item.second );
       for( const auto& item : balances )        prev_state->store_balance_record( item.second );
+#if 0
       for( const auto& item : proposals )       prev_state->store_proposal_record( item.second );
       for( const auto& item : proposal_votes )  prev_state->store_proposal_vote( item.second );
+#endif
       for( const auto& item : bids )            prev_state->store_bid_record( item.first, item.second );
       for( const auto& item : asks )            prev_state->store_ask_record( item.first, item.second );
       for( const auto& item : shorts )          prev_state->store_short_record( item.first, item.second );
@@ -64,13 +75,21 @@ namespace bts { namespace blockchain {
       for( const auto& item : slots )           prev_state->store_slot_record( item.second );
       for( const auto& item : market_history )  prev_state->store_market_history_record( item.first, item.second );
       for( const auto& item : market_statuses ) prev_state->store_market_status( item.second );
-       
-      for ( const auto& item : dices )          prev_state->store_dice_record(item.second);
+
+      for( const auto& item : feeds )           prev_state->set_feed( item.second );
+      for( const auto& items : recent_operations )
+      {
+         for( const auto& item : items.second )    prev_state->store_recent_operation( item );
+      }
+      for( const auto& item : burns ) prev_state->store_burn_record( burn_record(item.first,item.second) );
       prev_state->set_market_transactions( market_transactions );
+      prev_state->set_dirty_markets(_dirty_markets);
+
+      for ( const auto& item : dices )          prev_state->store_dice_record(item.second);
       prev_state->set_jackpot_transactions( jackpot_transactions );
    }
 
-   otransaction_record pending_chain_state::get_transaction( const transaction_id_type& trx_id, 
+   otransaction_record pending_chain_state::get_transaction( const transaction_id_type& trx_id,
                                                               bool exact  )const
    {
       auto itr = transactions.find( trx_id );
@@ -91,11 +110,14 @@ namespace bts { namespace blockchain {
                                                 const transaction_record& rec )
    {
       transactions[id] = rec;
+
+      for( const auto& op : rec.trx.operations )
+        store_recent_operation(op);
    }
 
    void pending_chain_state::get_undo_state( const chain_interface_ptr& undo_state_arg )const
    {
-      auto undo_state = std::dynamic_pointer_cast<pending_chain_state>(undo_state_arg);
+      auto undo_state = std::dynamic_pointer_cast<pending_chain_state>( undo_state_arg );
       chain_interface_ptr prev_state = _prev_state.lock();
       FC_ASSERT( prev_state );
       for( const auto& item : properties )
@@ -121,6 +143,7 @@ namespace bts { namespace blockchain {
          if( !!prev_value ) undo_state->store_account_record( *prev_value );
          else undo_state->store_account_record( item.second.make_null() );
       }
+#if 0
       for( const auto& item : proposals )
       {
          auto prev_value = prev_state->get_proposal_record( item.first );
@@ -133,13 +156,14 @@ namespace bts { namespace blockchain {
          if( !!prev_value ) undo_state->store_proposal_vote( *prev_value );
          else { undo_state->store_proposal_vote( item.second.make_null() ); }
       }
-      for( const auto& item : balances ) 
+#endif
+      for( const auto& item : balances )
       {
          auto prev_value = prev_state->get_balance_record( item.first );
          if( !!prev_value ) undo_state->store_balance_record( *prev_value );
          else undo_state->store_balance_record( item.second.make_null() );
       }
-      for( const auto& item : transactions ) 
+      for( const auto& item : transactions )
       {
          auto prev_value = prev_state->get_transaction( item.first );
          if( !!prev_value ) undo_state->store_transaction( item.first, *prev_value );
@@ -192,11 +216,28 @@ namespace bts { namespace blockchain {
          }
       }
        
-       for ( const auto& item : dices ) {
-           auto prev_value = prev_state->get_dice_record(item.first);
-           if( !! prev_state ) undo_state->store_dice_record( *prev_value );
-           else undo_state->store_dice_record( item.second.make_null() );
-       }
+      for( const auto& item : feeds )
+      {
+         auto prev_value = prev_state->get_feed( item.first );
+         if( prev_value ) undo_state->set_feed( *prev_value );
+         else undo_state->set_feed( feed_record{item.first} );
+      }
+      for( const auto& item : burns )
+      {
+         undo_state->store_burn_record( burn_record( item.first ) );
+      }
+
+      const auto dirty_markets = prev_state->get_dirty_markets();
+      undo_state->set_dirty_markets(dirty_markets);
+
+      /* NOTE: Recent operations are currently not rewound on undo */
+
+      for ( const auto& item : dices ) {
+          auto prev_value = prev_state->get_dice_record(item.first);
+          if( !! prev_state ) undo_state->store_dice_record( *prev_value );
+          else undo_state->store_dice_record( item.second.make_null() );
+      }
+
    }
 
    /** load the state from a variant */
@@ -213,13 +254,13 @@ namespace bts { namespace blockchain {
       return v;
    }
 
-   oasset_record pending_chain_state::get_asset_record( asset_id_type asset_id )const
+   oasset_record pending_chain_state::get_asset_record( const asset_id_type& asset_id )const
    {
       chain_interface_ptr prev_state = _prev_state.lock();
       auto itr = assets.find( asset_id );
-      if( itr != assets.end() ) 
+      if( itr != assets.end() )
         return itr->second;
-      else if( prev_state ) 
+      else if( prev_state )
         return prev_state->get_asset_record( asset_id );
       return oasset_record();
    }
@@ -228,28 +269,20 @@ namespace bts { namespace blockchain {
    {
       chain_interface_ptr prev_state = _prev_state.lock();
       auto itr = symbol_id_index.find( symbol );
-      if( itr != symbol_id_index.end() ) 
+      if( itr != symbol_id_index.end() )
         return get_asset_record( itr->second );
-      else if( prev_state ) 
+      else if( prev_state )
         return prev_state->get_asset_record( symbol );
       return oasset_record();
-   }
-
-   fc::time_point_sec pending_chain_state::now()const
-   {
-      chain_interface_ptr prev_state = _prev_state.lock();
-      if( prev_state ) 
-        return prev_state->now();
-      FC_ASSERT( false, "No current timestamp set" );
    }
 
    obalance_record pending_chain_state::get_balance_record( const balance_id_type& balance_id )const
    {
       chain_interface_ptr prev_state = _prev_state.lock();
       auto itr = balances.find( balance_id );
-      if( itr != balances.end() ) 
+      if( itr != balances.end() )
         return itr->second;
-      else if( prev_state ) 
+      else if( prev_state )
         return prev_state->get_balance_record( balance_id );
       return obalance_record();
    }
@@ -277,13 +310,13 @@ namespace bts { namespace blockchain {
       return prev_state->get_account_record( owner );
    }
 
-   oaccount_record pending_chain_state::get_account_record( account_id_type account_id )const
+   oaccount_record pending_chain_state::get_account_record( const account_id_type& account_id )const
    {
       chain_interface_ptr prev_state = _prev_state.lock();
       auto itr = accounts.find( account_id );
-      if( itr != accounts.end() ) 
+      if( itr != accounts.end() )
         return itr->second;
-      else if( prev_state ) 
+      else if( prev_state )
         return prev_state->get_account_record( account_id );
       return oaccount_record();
    }
@@ -292,9 +325,9 @@ namespace bts { namespace blockchain {
    {
       chain_interface_ptr prev_state = _prev_state.lock();
       auto itr = account_id_index.find( name );
-      if( itr != account_id_index.end() ) 
+      if( itr != account_id_index.end() )
         return get_account_record( itr->second );
-      else if( prev_state ) 
+      else if( prev_state )
         return prev_state->get_account_record( name );
       return oaccount_record();
    }
@@ -334,6 +367,22 @@ namespace bts { namespace blockchain {
       key_to_account[address(r.owner_key)] = r.id;
    }
 
+   vector<operation> pending_chain_state::get_recent_operations(operation_type_enum t)
+   {
+      const auto& recent_op_queue = recent_operations[t];
+      vector<operation> recent_ops(recent_op_queue.size());
+      std::copy(recent_op_queue.begin(), recent_op_queue.end(), recent_ops.begin());
+      return recent_ops;
+   }
+
+   void pending_chain_state::store_recent_operation(const operation& o)
+   {
+      auto& recent_op_queue = recent_operations[o.type];
+      recent_op_queue.push_back(o);
+      if( recent_op_queue.size() > MAX_RECENT_OPERATIONS )
+        recent_op_queue.pop_front();
+   }
+
    fc::variant pending_chain_state::get_property( chain_property_enum property_id )const
    {
       auto property_itr = properties.find( property_id );
@@ -343,12 +392,13 @@ namespace bts { namespace blockchain {
       return fc::variant();
    }
 
-   void pending_chain_state::set_property( chain_property_enum property_id, 
+   void pending_chain_state::set_property( chain_property_enum property_id,
                                                      const fc::variant& property_value )
    {
       properties[property_id] = property_value;
    }
 
+#if 0
    void pending_chain_state::store_proposal_record( const proposal_record& r )
    {
       proposals[r.id] = r;
@@ -362,7 +412,7 @@ namespace bts { namespace blockchain {
       else if( prev_state ) return prev_state->get_proposal_record( id );
       return oproposal_record();
    }
-                                                                                                          
+
    void pending_chain_state::store_proposal_vote( const proposal_vote& r )
    {
       proposal_votes[r.id] = r;
@@ -376,6 +426,7 @@ namespace bts { namespace blockchain {
       else if( prev_state ) return prev_state->get_proposal_vote( id );
       return oproposal_vote();
    }
+#endif
 
    oorder_record pending_chain_state::get_bid_record( const market_index_key& key )const
    {
@@ -386,11 +437,11 @@ namespace bts { namespace blockchain {
       return oorder_record();
    }
 
-   omarket_order   pending_chain_state::get_lowest_ask_record( asset_id_type quote_id, asset_id_type base_id ) 
+   omarket_order pending_chain_state::get_lowest_ask_record( const asset_id_type& quote_id, const asset_id_type& base_id )
    {
       chain_interface_ptr prev_state = _prev_state.lock();
       omarket_order result;
-      if( prev_state ) 
+      if( prev_state )
       {
         auto pending = prev_state->get_lowest_ask_record( quote_id, base_id );
         if( pending )
@@ -428,25 +479,31 @@ namespace bts { namespace blockchain {
       else if( prev_state ) return prev_state->get_collateral_record( key );
       return ocollateral_record();
    }
-                                                                                              
-   void pending_chain_state::store_bid_record( const market_index_key& key, const order_record& rec ) 
+
+   void pending_chain_state::store_bid_record( const market_index_key& key, const order_record& rec )
    {
       bids[key] = rec;
       _dirty_markets[key.order_price.quote_asset_id] = key.order_price.base_asset_id;
    }
 
-   void pending_chain_state::store_ask_record( const market_index_key& key, const order_record& rec ) 
+   void pending_chain_state::store_ask_record( const market_index_key& key, const order_record& rec )
    {
       asks[key] = rec;
       _dirty_markets[key.order_price.quote_asset_id] = key.order_price.base_asset_id;
    }
+
    void pending_chain_state::store_short_record( const market_index_key& key, const order_record& rec )
    {
       shorts[key] = rec;
       _dirty_markets[key.order_price.quote_asset_id] = key.order_price.base_asset_id;
    }
 
-   void pending_chain_state::store_collateral_record( const market_index_key& key, const collateral_record& rec ) 
+   void pending_chain_state::set_market_dirty( const asset_id_type& quote_id, const asset_id_type& base_id )
+   {
+      _dirty_markets[quote_id] = base_id;
+   }
+
+   void pending_chain_state::store_collateral_record( const market_index_key& key, const collateral_record& rec )
    {
       collateral[key] = rec;
       _dirty_markets[key.order_price.quote_asset_id] = key.order_price.base_asset_id;
@@ -480,7 +537,7 @@ namespace bts { namespace blockchain {
 
    void pending_chain_state::set_market_transactions( vector<market_transaction> trxs )
    {
-      market_transactions = std::move(trxs); 
+      market_transactions = std::move(trxs);
    }
     
    void pending_chain_state::set_jackpot_transactions( vector<jackpot_transaction> trxs )
@@ -488,7 +545,7 @@ namespace bts { namespace blockchain {
       jackpot_transactions = std::move(trxs);
    }
 
-   omarket_status    pending_chain_state::get_market_status( asset_id_type quote_id, asset_id_type base_id ) 
+   omarket_status pending_chain_state::get_market_status( const asset_id_type& quote_id, const asset_id_type& base_id )
    {
       auto itr = market_statuses.find( std::make_pair(quote_id,base_id) );
       if( itr != market_statuses.end() )
@@ -496,8 +553,46 @@ namespace bts { namespace blockchain {
       chain_interface_ptr prev_state = _prev_state.lock();
       return prev_state->get_market_status(quote_id,base_id);
    }
-   void              pending_chain_state::store_market_status( const market_status& s ) 
+
+   void pending_chain_state::store_market_status( const market_status& s )
    {
       market_statuses[std::make_pair(s.quote_id,s.base_id)] = s;
    }
+
+   void pending_chain_state::set_feed( const feed_record& r )
+   {
+      feeds[r.feed] = r;
+   }
+
+   ofeed_record pending_chain_state::get_feed( const feed_index& i )const
+   {
+      auto itr = feeds.find(i);
+      if( itr != feeds.end() ) return itr->second;
+
+      chain_interface_ptr prev_state = _prev_state.lock();
+      return prev_state->get_feed(i);
+   }
+
+   oprice pending_chain_state::get_median_delegate_price( const asset_id_type& asset_id )const
+   {
+      chain_interface_ptr prev_state = _prev_state.lock();
+      return prev_state->get_median_delegate_price( asset_id );
+   }
+
+   void pending_chain_state::store_burn_record( const burn_record& br )
+   {
+      burns[br] = br;
+   }
+
+   oburn_record pending_chain_state::fetch_burn_record( const burn_record_key& key )const
+   {
+      auto itr = burns.find(key);
+      if( itr == burns.end() )
+      {
+         chain_interface_ptr prev_state = _prev_state.lock();
+         return prev_state->fetch_burn_record( key );
+      }
+      return burn_record( itr->first, itr->second );
+   }
+
 } } // bts::blockchain

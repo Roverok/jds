@@ -2,8 +2,8 @@
 #include <bts/blockchain/asset_operations.hpp>
 #include <bts/blockchain/balance_operations.hpp>
 #include <bts/blockchain/market_operations.hpp>
-#include <bts/blockchain/proposal_operations.hpp>
 #include <bts/blockchain/dice_operations.hpp>
+#include <bts/blockchain/feed_operations.hpp>
 #include <bts/blockchain/time.hpp>
 #include <bts/blockchain/transaction.hpp>
 
@@ -40,12 +40,18 @@ namespace bts { namespace blockchain {
 
    void transaction::define_delegate_slate( delegate_slate s )
    {
-      FC_ASSERT( s.supported_delegates.size() > 0 )
+      FC_ASSERT( s.supported_delegates.size() > 0 );
       operations.emplace_back( define_delegate_slate_operation( std::move(s) ) );
    }
 
-   void transaction::bid( const asset& quantity, 
-                          const price& price_per_unit, 
+   void transaction::burn( const asset& quantity, account_id_type for_or_against, const string& message, const optional<signature_type>& sig )
+   {
+      if( message.size() ) FC_ASSERT( quantity.asset_id == 0 );
+      operations.emplace_back( burn_operation( quantity, for_or_against, message, sig) );
+   }
+
+   void transaction::bid( const asset& quantity,
+                          const price& price_per_unit,
                           const address& owner )
    {
       bid_operation op;
@@ -56,8 +62,8 @@ namespace bts { namespace blockchain {
       operations.emplace_back(op);
    }
 
-   void transaction::ask( const asset& quantity, 
-                          const price& price_per_unit, 
+   void transaction::ask( const asset& quantity,
+                          const price& price_per_unit,
                           const address& owner )
    {
       ask_operation op;
@@ -68,34 +74,36 @@ namespace bts { namespace blockchain {
       operations.emplace_back(op);
    }
 
-   void transaction::short_sell( const asset& quantity, 
-                          const price& price_per_unit, 
-                          const address& owner )
+   void transaction::short_sell( const asset& quantity,
+                          const price& price_per_unit,
+                          const address& owner,
+                          const optional<price>& limit_price )
    {
       short_operation op;
       op.amount = quantity.amount;
       op.short_index.order_price = price_per_unit;
       op.short_index.owner = owner;
+      op.short_price_limit = limit_price;
 
       operations.emplace_back(op);
    }
 
-   void transaction::withdraw( const balance_id_type& account, 
+   void transaction::withdraw( const balance_id_type& account,
                                share_type             amount )
    { try {
       FC_ASSERT( amount > 0, "amount: ${amount}", ("amount",amount) );
       operations.push_back( withdraw_operation( account, amount ) );
    } FC_RETHROW_EXCEPTIONS( warn, "", ("account",account)("amount",amount) ) }
 
-   void transaction::withdraw_pay( const account_id_type& account, 
+   void transaction::withdraw_pay( const account_id_type& account,
                                    share_type             amount )
    {
       FC_ASSERT( amount > 0, "amount: ${amount}", ("amount",amount) );
       operations.push_back( withdraw_pay_operation( amount, account ) );
    }
 
-   void transaction::deposit( const address&  owner, 
-                              const asset&    amount, 
+   void transaction::deposit( const address&  owner,
+                              const asset&    amount,
                               slate_id_type   slate_id )
    {
       FC_ASSERT( amount.amount > 0, "amount: ${amount}", ("amount",amount) );
@@ -128,8 +136,8 @@ namespace bts { namespace blockchain {
    }
 
    void transaction::register_account( const std::string& name,
-                                       const fc::variant& public_data, 
-                                       const public_key_type& master, 
+                                       const fc::variant& public_data,
+                                       const public_key_type& master,
                                        const public_key_type& active,
                                        uint8_t pay_rate )
    {
@@ -137,9 +145,9 @@ namespace bts { namespace blockchain {
       operations.push_back( op );
    }
 
-   void transaction::update_account( account_id_type account_id, 
+   void transaction::update_account( account_id_type account_id,
                                   uint8_t delegate_pay_rate,
-                                  const fc::optional<fc::variant>& public_data, 
+                                  const fc::optional<fc::variant>& public_data,
                                   const fc::optional<public_key_type>& active   )
    {
       update_account_operation op;
@@ -150,6 +158,7 @@ namespace bts { namespace blockchain {
       operations.push_back( op );
    }
 
+#if 0
    void transaction::submit_proposal(account_id_type delegate_id,
                                      const std::string& subject,
                                      const std::string& body,
@@ -179,9 +188,10 @@ namespace bts { namespace blockchain {
      op.message = message;
      operations.push_back(op);
    }
+#endif
 
-   void transaction::create_asset( const std::string& symbol, 
-                                   const std::string& name, 
+   void transaction::create_asset( const std::string& symbol,
+                                   const std::string& name,
                                    const std::string& description,
                                    const fc::variant& data,
                                    account_id_type issuer_id,
@@ -215,10 +225,23 @@ namespace bts { namespace blockchain {
    {
       operations.push_back( issue_asset_operation( amount_to_issue ) );
    }
-   void transaction::cover( const asset& cover_amount, 
+   void transaction::cover( const asset& cover_amount,
                             const market_index_key& order_idx )
    {
       operations.push_back( cover_operation(cover_amount.amount, order_idx) );
+   }
+
+   void transaction::add_collateral( share_type collateral_amount,
+                                     const market_index_key& order_idx )
+   {
+      operations.push_back( add_collateral_operation(collateral_amount, order_idx) );
+   }
+
+   void transaction::publish_feed( feed_id_type feed_id,
+                                   account_id_type delegate_id,
+                                   fc::variant value )
+   {
+      operations.push_back( update_feed_operation{ feed_index{feed_id,delegate_id}, value } );
    }
 
    bool transaction::is_cancel()const
@@ -243,4 +266,4 @@ namespace bts { namespace blockchain {
       return false;
    }
 
-} } // bts::blockchain 
+} } // bts::blockchain

@@ -30,12 +30,12 @@
       {
         "method_name": "help",
         "description": "display a list of commands, or detailed help on an individual command",
-        "return_type": "std::string",
-        "parameters" : 
+        "return_type": "string",
+        "parameters" :
           [
-            { 
-              "name" : "command_name", 
-              "type" : "method_name", 
+            {
+              "name" : "command_name",
+              "type" : "method_name",
               "description" : "the name of the method to get detailed help, or omit this for a list of commands",
               "default_value" : ""
             }
@@ -48,11 +48,11 @@
         "method_name": "validate_address",
         "description": "Return information about given BitShares address",
         "return_type": "json_object",
-        "parameters" : 
+        "parameters" :
           [
-            { 
-              "name" : "address", 
-              "type" : "std::string", 
+            {
+              "name" : "address",
+              "type" : "string",
               "description" : "the address or public key to validate"
             }
           ],
@@ -63,33 +63,33 @@
       {
         "method_name": "execute_command_line",
         "description": "Execute the given command as if it were typed on the CLI",
-        "return_type": "std::string",
-        "parameters" : 
+        "return_type": "string",
+        "parameters" :
           [
-            { 
-              "name" : "input", 
-              "type" : "passphrase", 
+            {
+              "name" : "input",
+              "type" : "passphrase",
               "description" : "The entire command input as if it were a CLI input"
             }
           ],
         "is_const"   : true,
-        "prerequisites" : ["no_prerequisites"]
+        "prerequisites" : ["json_authenticated"]
       },
       {
         "method_name": "execute_script",
         "description": "Execute the given file as if it were typed on the CLI",
         "return_type": "void",
-        "parameters" : 
+        "parameters" :
           [
-            { 
-              "name" : "script", 
-              "type" : "filename", 
+            {
+              "name" : "script",
+              "type" : "filename",
               "description" : "Name of a file containing CLI commands to execute",
 	      "example" : "/path/to/script_file.log"
             }
           ],
         "is_const"   : true,
-        "prerequisites" : ["no_prerequisites"]
+        "prerequisites" : ["json_authenticated"]
       },
       {
          "method_name": "batch",
@@ -109,7 +109,7 @@
          }
          ],
          "is_const"   : true,
-         "prerequisites" : ["no_prerequisites"]
+         "prerequisites" : ["json_authenticated"]
       },
       {
         "method_name": "meta_help",
@@ -123,65 +123,65 @@
         "method_name" : "rpc_set_username",
         "description" : "Set the username for basic auth for the http server.",
         "return_type" : "void",
-        "parameters"  : 
-          [ 
+        "parameters"  :
+          [
             {
-              "name"          : "username", 
+              "name"          : "username",
               "description"   : "Username for basic auth",
-              "type"          : "string", 
+              "type"          : "string",
               "default_value" : ""
             }
           ],
         "is_const"   : false,
-        "prerequisites" : ["no_prerequisites"]
+        "prerequisites" : ["json_authenticated"]
       },
       {
         "method_name" : "rpc_set_password",
         "description" : "Set the password for basic auth for the http server.",
         "return_type" : "void",
-        "parameters"  : 
-          [ 
+        "parameters"  :
+          [
             {
-              "name"          : "password", 
+              "name"          : "password",
               "description"   : "Password for basic auth",
-              "type"          : "string", 
+              "type"          : "passphrase",
               "default_value" : ""
             }
           ],
         "is_const"   : false,
-        "prerequisites" : ["no_prerequisites"]
+        "prerequisites" : ["json_authenticated"]
       },
       {
         "method_name" : "rpc_start_server",
         "description" : "Set the port and start rpc server.",
         "return_type" : "void",
-        "parameters"  : 
-          [ 
+        "parameters"  :
+          [
             {
-              "name"          : "port", 
+              "name"          : "port",
               "description"   : "Port for rpc server",
-              "type"          : "uint32_t", 
+              "type"          : "uint32_t",
               "default_value" : "65065"
             }
           ],
         "is_const"   : false,
-        "prerequisites" : ["no_prerequisites"]
+        "prerequisites" : ["json_authenticated"]
       },
       {
         "method_name" : "http_start_server",
         "description" : "Set the port and start http server.",
         "return_type" : "void",
-        "parameters"  : 
-          [ 
+        "parameters"  :
+          [
             {
-              "name"          : "port", 
+              "name"          : "port",
               "description"   : "Port for http server",
-              "type"          : "uint32_t", 
+              "type"          : "uint32_t",
               "default_value" : "65066"
             }
           ],
         "is_const"   : false,
-        "prerequisites" : ["no_prerequisites"]
+        "prerequisites" : ["json_authenticated"]
       }
     ]
 }

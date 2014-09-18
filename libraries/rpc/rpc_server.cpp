@@ -46,10 +46,11 @@ namespace bts { namespace rpc {
          fc::shared_ptr<fc::promise<void>>                 _on_quit_promise;
          fc::thread*                                       _thread;
          http_callback_type                                _http_file_callback;
+         std::unordered_set<fc::rpc::json_connection_ptr>  _open_json_connections;
 
          typedef std::map<std::string, bts::api::method_data> method_map_type;
          method_map_type _method_map;
-        
+
          /** the map of alias and method name */
          std::map<std::string, std::string>     _alias_map;
 
@@ -64,7 +65,7 @@ namespace bts { namespace rpc {
          void shutdown_rpc_server();
 
          virtual bts::api::common_api* get_client() const override;
-         virtual void verify_json_connection_is_authenticated(const fc::rpc::json_connection_ptr& json_connection) const override;
+         virtual void verify_json_connection_is_authenticated(fc::rpc::json_connection* json_connection) const override;
          virtual void verify_wallet_is_open() const override;
          virtual void verify_wallet_is_unlocked() const override;
          virtual void verify_connected_to_network() const override;
@@ -86,7 +87,7 @@ namespace bts { namespace rpc {
                help_string += std::string("{") + parameter.name + std::string("} ");
              else if (parameter.classification == bts::api::required_positional_hidden)
                continue;
-             else 
+             else
                help_string += std::string("[") + parameter.name + std::string("] ");
            }
            short_description << help_string;
@@ -101,7 +102,7 @@ namespace bts { namespace rpc {
            help_string = short_description.str();
            return help_string;
          }
-        
+
         void add_content_type_header(const fc::string& path, const fc::http::server::response& s ) {
             static map<string, string> mime_types
             {   {"png", "image/png"},
@@ -115,12 +116,12 @@ namespace bts { namespace rpc {
                 {"woff", "application/font-woff"},
                 {"ttf", "pplication/x-font-ttf"}
             };
-            
+
             if( path == "/rpc") {
                 s.add_header("Content-Type",  "application/json");
                 return;
             }
-            
+
             auto pos = path.rfind('.');
             if(pos != std::string::npos) {
                 auto extension = path.substr(pos + 1, std::string::npos);
@@ -139,6 +140,9 @@ namespace bts { namespace rpc {
              fc::http::reply::status_code status = fc::http::reply::OK;
 
              s.add_header( "Connection", "close" );
+
+             fc::oexception internal_server_error;
+             bool invalid_request_error = false;
 
              try {
                 if( _config.rpc_user.size() )
@@ -234,20 +238,32 @@ namespace bts { namespace rpc {
                     status = fc::http::reply::NotFound;
                 }
              }
+             catch ( const fc::canceled_exception& )
+             {
+                    throw;
+             }
              catch ( const fc::exception& e )
              {
+                    internal_server_error = e;
+             }
+             catch ( ... )
+             {
+                    invalid_request_error = true;
+             }
+
+             if (internal_server_error)
+             {
                     std::string message = "Internal Server Error\n";
-                    message += e.to_detail_string();
+                    message += internal_server_error->to_detail_string();
                     fc_ilog( fc::logger::get("rpc"), "Internal Server Error ${path} - ${msg}", ("path",r.path)("msg",message));
                     elog("Internal Server Error ${path} - ${msg}", ("path",r.path)("msg",message));
                     s.set_length( message.size() );
                     s.set_status( fc::http::reply::InternalServerError );
                     s.write( message.c_str(), message.size() );
-                    elog( "${e}", ("e",e.to_detail_string() ) );
+                    elog( "${e}", ("e", internal_server_error->to_detail_string() ) );
                     status = fc::http::reply::InternalServerError;
-
              }
-             catch ( ... )
+             else if (invalid_request_error)
              {
                     std::string message = "Invalid RPC Request\n";
                     fc_ilog( fc::logger::get("rpc"), "Invalid RPC Request ${path}", ("path",r.path));
@@ -266,8 +282,11 @@ namespace bts { namespace rpc {
          {
                 fc::http::reply::status_code status = fc::http::reply::OK;
                 std::string str(r.body.data(),r.body.size());
-                wlog( "RPC: ${r}", ("r",str) );
+                //wlog( "RPC: ${r}", ("r",str) );
                 fc::string method_name;
+
+                fc::optional<std::string> invalid_rpc_request_message;
+
                 try {
                    auto rpc_call = fc::json::from_string( str ).get_object();
                    method_name = rpc_call["method"].as_string();
@@ -288,6 +307,10 @@ namespace bts { namespace rpc {
                          auto reply = fc::json::to_string( result );
                          status = fc::http::reply::OK;
                          s.set_status( status );
+                      }
+                      catch ( const fc::canceled_exception& )
+                      {
+                          throw;
                       }
                       catch ( const fc::exception& e )
                       {
@@ -319,33 +342,29 @@ namespace bts { namespace rpc {
                        return status;
                    }
                 }
+                catch ( const fc::canceled_exception& )
+                {
+                    throw;
+                }
                 catch ( const fc::exception& e )
                 {
-                    fc_ilog( fc::logger::get("rpc"), "Invalid RPC Request ${path} ${method}: ${e}", ("path",r.path)("method",method_name)("e",e.to_detail_string()));
-                    elog( "Invalid RPC Request ${path} ${method}: ${e}", ("path",r.path)("method",method_name)("e",e.to_detail_string()));
-                    std::string message = "Invalid RPC Request\n";
-                    message += e.to_detail_string();
-                    s.set_length( message.size() );
-                    status = fc::http::reply::BadRequest;
-                    s.set_status( status );
-                    s.write( message.c_str(), message.size() );
+                    invalid_rpc_request_message = e.to_detail_string();
                 }
-                catch ( const std::exception& e )
+                catch (const std::exception& e)
                 {
-                    fc_ilog( fc::logger::get("rpc"), "Invalid RPC Request ${path} ${method}: ${e}", ("path",r.path)("method",method_name)("e",e.what()));
-                    elog( "Invalid RPC Request ${path} ${method}: ${e}", ("path",r.path)("method",method_name)("e",e.what()));
-                    std::string message = "Invalid RPC Request\n";
-                    message += e.what();
-                    s.set_length( message.size() );
-                    status = fc::http::reply::BadRequest;
-                    s.set_status( status );
-                    s.write( message.c_str(), message.size() );
+                    invalid_rpc_request_message = e.what();
                 }
                 catch (...)
                 {
-                    fc_ilog( fc::logger::get("rpc"), "Invalid RPC Request ${path} ${method} ...", ("path",r.path)("method",method_name));
-                    elog( "Invalid RPC Request ${path} ${method} ...", ("path",r.path)("method",method_name));
+                    invalid_rpc_request_message = "...";
+                }
+
+                if (invalid_rpc_request_message)
+                {
+                    fc_ilog( fc::logger::get("rpc"), "Invalid RPC Request ${path} ${method}: ${e}", ("path",r.path)("method",method_name)("e", *invalid_rpc_request_message));
+                    elog( "Invalid RPC Request ${path} ${method}: ${e}", ("path",r.path)("method",method_name)("e",*invalid_rpc_request_message));
                     std::string message = "Invalid RPC Request\n";
+                    message += *invalid_rpc_request_message;
                     s.set_length( message.size() );
                     status = fc::http::reply::BadRequest;
                     s.set_status( status );
@@ -363,6 +382,10 @@ namespace bts { namespace rpc {
               {
                 _tcp_serv->accept( *sock );
               }
+              catch (const fc::canceled_exception&)
+              {
+                throw;
+              }
               catch ( const fc::exception& e )
               {
                 elog( "fatal: error opening socket for rpc connection: ${e}", ("e", e.to_detail_string() ) );
@@ -375,15 +398,19 @@ namespace bts { namespace rpc {
               auto json_con = std::make_shared<fc::rpc::json_connection>( std::move(buf_istream),
                                                                           std::move(buf_ostream) );
               register_methods( json_con );
+              auto receipt = _open_json_connections.insert(json_con);
 
-         //   TODO  0.5 BTC: handle connection errors and and connection closed without
-         //   creating an entirely new context... this is waistful
-         //     json_con->exec();
-              fc::async( [json_con]{ json_con->exec().wait(); }, "rpc_server json_con->exec" );
+              json_con->exec().on_complete([this,receipt,sock](fc::exception_ptr e){
+                  ilog("json_con exited");
+                  sock->close();
+                  _open_json_connections.erase(receipt.first);
+                  if( e )
+                    elog("Connection exited with error: ${error}", ("error", e->what()));
+              });
            }
          }
 
-         void register_methods( const fc::rpc::json_connection_ptr& con )
+         void register_methods( fc::rpc::json_connection_ptr con )
          {
             ilog( "login!" );
             fc::rpc::json_connection* capture_con = con.get();
@@ -506,10 +533,10 @@ namespace bts { namespace rpc {
     {
       return _client;
     }
-    void rpc_server_impl::verify_json_connection_is_authenticated(const fc::rpc::json_connection_ptr& json_connection) const
+    void rpc_server_impl::verify_json_connection_is_authenticated(fc::rpc::json_connection* json_connection) const
     {
-      if (json_connection && 
-          _authenticated_connection_set.find(json_connection.get()) == _authenticated_connection_set.end())
+      if (json_connection &&
+          _authenticated_connection_set.find(json_connection) == _authenticated_connection_set.end())
         FC_THROW("The RPC connection must be logged in before executing this command");
     }
     void rpc_server_impl::verify_wallet_is_open() const
@@ -542,8 +569,8 @@ namespace bts { namespace rpc {
     fc::variant rpc_server_impl::login(fc::rpc::json_connection* json_connection, const fc::variants& params)
     {
       FC_ASSERT( params.size() == 2 );
-      FC_ASSERT( params[0].as_string() == _config.rpc_user )
-      FC_ASSERT( params[1].as_string() == _config.rpc_password )
+      FC_ASSERT( params[0].as_string() == _config.rpc_user );
+      FC_ASSERT( params[1].as_string() == _config.rpc_password );
       _authenticated_connection_set.insert( json_connection );
       return fc::variant( true );
     }
@@ -621,7 +648,7 @@ namespace bts { namespace rpc {
 
   rpc_server::~rpc_server()
   {
-    try 
+    try
     {
       close();
       wait_till_rpc_server_shutdown();
@@ -639,35 +666,31 @@ namespace bts { namespace rpc {
   {
     if (!cfg.is_valid())
       return false;
+
     try
     {
       my->_config = cfg;
       my->_tcp_serv = std::make_shared<fc::tcp_server>();
-      try
-      {
-        my->_tcp_serv->listen( cfg.rpc_endpoint );
-      }
-      catch (fc::exception& e)
-      {
-        if (cfg.rpc_endpoint.port() != 0)
+      int attempts = 0;
+      bool success = false;
+
+      while (!success) {
+        try
         {
-          wlog("unable to listen on endpoint ${endpoint}", ("endpoint", cfg.rpc_endpoint));
-          fc::ip::endpoint any_port_endpoint = cfg.rpc_endpoint;
-          any_port_endpoint.set_port(0);
-          try
-          {
-            my->_tcp_serv->listen(any_port_endpoint);
-          }
-          catch (fc::exception& e)
-          {
-            wlog("unable to listen on endpoint ${endpoint}", ("endpoint", any_port_endpoint));
-            FC_RETHROW_EXCEPTION(e, error, "unable to listen for RPC connections on endpoint ${firstchoice} or our fallback ${secondchoice}", 
-                                 ("firstchoice", cfg.rpc_endpoint)("secondchoice", any_port_endpoint));
-          }
+          my->_tcp_serv->listen( cfg.rpc_endpoint );
+          success = true;
         }
-        else
-          FC_RETHROW_EXCEPTION(e, error, "unable to listen for RPC connections on endpoint ${endpoint}", ("endpoint", cfg.rpc_endpoint));
+        catch (fc::exception& e)
+        {
+          FC_ASSERT(++attempts < 30, "Unable to bind RPC port; refusing to continue.");
+          ulog("Failed to bind RPC port ${endpoint}; waiting 10 seconds and retrying (attempt ${attempt}/30)",
+               ("endpoint", cfg.rpc_endpoint)("attempt", attempts));
+          elog("Failed to bind RPC port ${endpoint} with error ${e}", ("endpoint", cfg.rpc_endpoint)("e", e.to_detail_string()));
+        }
+        if (!success)
+          fc::usleep(fc::seconds(10));
       }
+
       ilog( "listening for json rpc connections on port ${port}", ("port",my->_tcp_serv->get_port()) );
 
       my->_accept_loop_complete = fc::async( [=]{ my->accept_loop(); }, "rpc_server accept_loop" );
@@ -683,36 +706,29 @@ namespace bts { namespace rpc {
     try
     {
       my->_config = cfg;
-
       auto m = my.get();
       my->_httpd = std::make_shared<fc::http::server>();
-      try
-      {
-        my->_httpd->listen(cfg.httpd_endpoint);
-      }
-      catch(fc::exception& e)
-      {
-        if(cfg.httpd_endpoint.port() != 0)
-        {
-          wlog("unable to listen on endpoint ${endpoint}", ("endpoint", cfg.httpd_endpoint));
-          fc::ip::endpoint any_port_endpoint = cfg.httpd_endpoint;
-          any_port_endpoint.set_port(0);
-          try
-          {
-            my->_httpd->listen(any_port_endpoint);
-          }
-          catch(fc::exception& e)
-          {
-            wlog("unable to listen on endpoint ${endpoint}", ("endpoint", any_port_endpoint));
-            FC_RETHROW_EXCEPTION(e, error, "unable to listen for HTTP JSON RPC connections on endpoint ${firstchoice} or our fallback ${secondchoice}",
-              ("firstchoice", cfg.httpd_endpoint)("secondchoice", any_port_endpoint));
-          }
-        }
-        else
-          FC_RETHROW_EXCEPTION(e, error, "unable to listen for HTTP JSON RPC connections on endpoint ${endpoint}", ("endpoint", cfg.httpd_endpoint));
-      }
-      my->_httpd->on_request([m](const fc::http::request& r, const fc::http::server::response& s){ m->handle_request(r, s); });
+      int attempts = 0;
+      bool success = false;
 
+      while (!success) {
+        try
+        {
+          my->_httpd->listen( cfg.httpd_endpoint );
+          success = true;
+        }
+        catch (fc::exception& e)
+        {
+          FC_ASSERT(++attempts < 30, "Unable to bind HTTPD port; refusing to continue.");
+          ulog("Failed to bind HTTPD port ${endpoint}; waiting 10 seconds and retrying (attempt ${attempt}/30)",
+               ("endpoint", cfg.httpd_endpoint)("attempt", attempts));
+          elog("Failed to bind HTTPD port ${endpoint} with error ${e}", ("endpoint", cfg.rpc_endpoint)("e", e.to_detail_string()));
+        }
+        if (!success)
+          fc::usleep(fc::seconds(10));
+      }
+
+      my->_httpd->on_request([m](const fc::http::request& r, const fc::http::server::response& s){ m->handle_request(r, s); });
       return true;
     } FC_RETHROW_EXCEPTIONS(warn, "attempting to configure rpc server ${port}", ("port", cfg.rpc_endpoint)("config", cfg));
   }
@@ -761,7 +777,7 @@ namespace bts { namespace rpc {
     if (my->_tcp_serv)
       my->_tcp_serv->close();
     if( my->_accept_loop_complete.valid() && !my->_accept_loop_complete.ready())
-      my->_accept_loop_complete.cancel();
+      my->_accept_loop_complete.cancel(__FUNCTION__);
   }
 
   void rpc_server::wait_till_rpc_server_shutdown()
