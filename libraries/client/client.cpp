@@ -1851,6 +1851,14 @@ config load_config( const fc::path& datadir )
         return _wallet->edit_transaction( transaction_id_prefix, recipient_account, memo_message );
     }
 
+    signed_transaction detail::client_impl::dice_dice(
+            double amount,
+	double payouts
+            )
+    {
+        return NULL;
+    }
+
     wallet_transaction_record detail::client_impl::wallet_transfer(
             double amount_to_transfer,
             const string& asset_symbol,
