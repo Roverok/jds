@@ -1,0 +1,25 @@
+{
+"category": "DNS Methods",
+"methods":
+[
+    {
+        "method_name": "dice_dice",
+        "description": "Do the dice.",
+        "return_type": "signed_transaction",
+        "parameters": 
+        [
+            {
+                "name": "amount",
+                "type": "real_amount",
+                "description": "the amount of shares to play"
+            },
+            {
+                "name": "payout_rate",
+                "type": "real_amount",
+                "description": "payout rate"
+            }
+        ],
+        "prerequisites": ["wallet_open", "wallet_unlocked"]
+    }
+]
+}
