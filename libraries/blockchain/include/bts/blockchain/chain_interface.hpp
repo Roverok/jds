@@ -87,61 +87,10 @@ namespace bts { namespace blockchain {
          virtual share_type                 get_asset_registration_fee()const;
 
          virtual int64_t                    get_required_confirmations()const;
-<<<<<<< HEAD
-         virtual fc::variant                get_property( chain_property_enum property_id )const    = 0;
-         virtual void                       set_property( chain_property_enum property_id, 
-                                                          const fc::variant& property_value )       = 0;
 
-         virtual omarket_status             get_market_status( asset_id_type quote_id, asset_id_type base_id ) = 0;
-         virtual void                       store_market_status( const market_status& s ) = 0;
-
-         virtual omarket_order              get_lowest_ask_record( asset_id_type quote_id, asset_id_type base_id ) = 0;
-         virtual oorder_record              get_bid_record( const market_index_key& )const          = 0;
-         virtual oorder_record              get_ask_record( const market_index_key& )const          = 0;
-         virtual oorder_record              get_short_record( const market_index_key& )const        = 0;
-         virtual ocollateral_record         get_collateral_record( const market_index_key& )const   = 0;
-                                                                                                            
-         virtual void                       store_bid_record( const market_index_key& key, 
-                                                              const order_record& )                 = 0;
-
-         virtual void                       store_ask_record( const market_index_key& key, 
-                                                              const order_record& )                 = 0;
-
-         virtual void                       store_short_record( const market_index_key& key, 
-                                                                const order_record& )               = 0;
-
-         virtual void                       store_collateral_record( const market_index_key& key, 
-                                                                     const collateral_record& )     = 0;
-
-
-         virtual oasset_record              get_asset_record( asset_id_type id )const               = 0;
-         virtual obalance_record            get_balance_record( const balance_id_type& id )const    = 0;
-         virtual oaccount_record            get_account_record( account_id_type id )const           = 0;
-         virtual oaccount_record            get_account_record( const address& owner )const         = 0;
          virtual odice_record               get_dice_record( const dice_id_type& id )const                  = 0;
+         virtual void                       store_dice_record( const dice_record& r )                       = 0;
 
-         virtual bool                       is_known_transaction( const transaction_id_type& trx_id ) = 0;
-
-         virtual otransaction_record        get_transaction( const transaction_id_type& trx_id, 
-                                                             bool exact = true )const               = 0;
-
-         virtual void                       store_transaction( const transaction_id_type&, 
-                                                                const transaction_record&  )        = 0;
-                                                                                                  
-         virtual oasset_record              get_asset_record( const std::string& symbol )const      = 0;
-         virtual oaccount_record            get_account_record( const std::string& name )const      = 0;
-                                                                                                  
-         virtual void                       store_proposal_record( const proposal_record& r )       = 0;
-         virtual oproposal_record           get_proposal_record( proposal_id_type id )const         = 0;
-                                                                                                  
-         virtual void                       store_proposal_vote( const proposal_vote& r )           = 0;
-         virtual oproposal_vote             get_proposal_vote( proposal_vote_id_type id )const      = 0;
-
-         virtual void                       store_asset_record( const asset_record& r )             = 0;
-         virtual void                       store_balance_record( const balance_record& r )         = 0;
-         virtual void                       store_account_record( const account_record& r )         = 0;
-         virtual void                       store_dice_record( const dice_record& r )               = 0;
-=======
          virtual fc::variant                get_property( chain_property_enum property_id )const            = 0;
          virtual void                       set_property( chain_property_enum property_id,
                                                           const fc::variant& property_value )               = 0;
@@ -228,6 +177,8 @@ namespace bts { namespace blockchain {
 
          virtual void                       set_jackpot_transactions( vector<jackpot_transaction> trxs ) = 0;
          virtual void                       set_market_transactions( vector<market_transaction> trxs )      = 0;
+
+	 virtual asset                      calculate_base_supply()const                                    = 0;
    };
    typedef std::shared_ptr<chain_interface> chain_interface_ptr;
 

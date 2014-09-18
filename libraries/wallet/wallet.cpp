@@ -1288,8 +1288,8 @@ namespace bts { namespace wallet {
              return true;
           }
           return false;
-      } FC_CAPTURE_AND_RETHROW( (short_op) ) }
-       
+      } FC_CAPTURE_AND_RETHROW( (op) ) }
+
       bool wallet_impl::scan_dice( const dice_operation& op, wallet_transaction_record& trx_rec )
       { try {
           switch( (withdraw_condition_types) op.condition.type )
@@ -1545,26 +1545,7 @@ namespace bts { namespace wallet {
 
       void wallet_impl::relocker()
       {
-          fc::time_point now = fc::time_point::now();
-          ilog( "Starting wallet relocker task at time: ${t}", ("t", now) );
-          if( !_scheduled_lock_time.valid() || now >= *_scheduled_lock_time )
-          {
-              /* Don't relock if we have enabled delegates */
-              if( !self->get_my_delegates( enabled_delegate_status ).empty() )
-              {
-                  ulog( "Wallet not automatically relocking because there are enabled delegates!" );
-                  return;
-              }
-
-              self->lock();
-          }
-          else
-          {
-            if (!_relocker_done.canceled())
-            {
-              ilog( "Scheduling wallet relocker task for time: ${t}", ("t", *_scheduled_lock_time) );
-              _relocker_done = fc::schedule( [this](){ relocker(); },
-                                             *_scheduled_lock_time,
+          fc::time_point now = fc::time_point::now(); ilog( "Starting wallet relocker task at time: ${t}", ("t", now) ); if( !_scheduled_lock_time.valid() || now >= *_scheduled_lock_time ) { /* Don't relock if we have enabled delegates */ if( !self->get_my_delegates( enabled_delegate_status ).empty() ) { ulog( "Wallet not automatically relocking because there are enabled delegates!" ); return; } self->lock(); } else { if (!_relocker_done.canceled()) { ilog( "Scheduling wallet relocker task for time: ${t}", ("t", *_scheduled_lock_time) ); _relocker_done = fc::schedule( [this](){ relocker(); }, *_scheduled_lock_time,
                                              "wallet_relocker" );
             }
           }
@@ -4445,7 +4426,7 @@ namespace bts { namespace wallet {
         
         // TODO: adjust fee based upon blockchain price per byte and
         // the size of trx... 'recursively'
-        auto required_fees = get_priority_fee();
+        auto required_fees = get_transaction_fee();
         
         // No longer necessary I believe
         //auto size_fee = fc::raw::pack_size( data );

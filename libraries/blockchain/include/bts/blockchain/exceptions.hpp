@@ -85,6 +85,13 @@ namespace bts { namespace blockchain {
    FC_DECLARE_DERIVED_EXCEPTION( missing_deposit,                   bts::blockchain::evaluation_error, 36004, "missing deposit" );
    FC_DECLARE_DERIVED_EXCEPTION( insufficient_relay_fee,            bts::blockchain::evaluation_error, 36005, "insufficient relay fee" );
 
+   FC_DECLARE_DERIVED_EXCEPTION( invalid_market,                    bts::blockchain::evaluation_error, 37001, "invalid market" );
+   FC_DECLARE_DERIVED_EXCEPTION( unknown_market_order,              bts::blockchain::evaluation_error, 37002, "unknown market order" );
+   FC_DECLARE_DERIVED_EXCEPTION( shorting_base_shares,              bts::blockchain::evaluation_error, 37003, "shorting base shares" );
+   FC_DECLARE_DERIVED_EXCEPTION( insufficient_collateral,           bts::blockchain::evaluation_error, 37004, "insufficient collateral" );
+   FC_DECLARE_DERIVED_EXCEPTION( insufficient_depth,                bts::blockchain::evaluation_error, 37005, "insufficient depth" );
+   FC_DECLARE_DERIVED_EXCEPTION( insufficient_feeds,                bts::blockchain::evaluation_error, 37006, "insufficient feeds" );
+
    FC_DECLARE_DERIVED_EXCEPTION( invalid_dice_odds,  bts::blockchain::evaluation_error, 100000, "invalid dice odds" );
    FC_DECLARE_DERIVED_EXCEPTION( duplicate_dice_in_transaction,  bts::blockchain::evaluation_error, 100001, "duplicate dice in transactions" );
 

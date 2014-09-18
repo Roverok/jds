@@ -737,7 +737,6 @@ namespace bts { namespace blockchain {
          pending_state->set_property( last_random_seed_id,
                                       fc::variant(fc::ripemd160::hash( enc.result() )) );
       }
-<<<<<<< HEAD
        
       void chain_database_impl::execute_dice_jackpot( uint32_t block_num, const pending_chain_state_ptr& pending_state )
       {
@@ -840,6 +839,7 @@ namespace bts { namespace blockchain {
              pending_state->set_property( chain_property_enum::active_delegate_list_id, fc::variant(active_del) );
           }
       }
+
       void chain_database_impl::execute_markets( const fc::time_point_sec& timestamp, const pending_chain_state_ptr& pending_state )
       { try {
         //dlog( "execute markets ${e}", ("e", pending_state->get_dirty_markets()) );
