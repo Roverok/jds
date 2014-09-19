@@ -1856,7 +1856,7 @@ config load_config( const fc::path& datadir )
 	double payouts
             )
     {
-        return NULL;
+        return signed_transaction();
     }
 
     wallet_transaction_record detail::client_impl::wallet_transfer(
