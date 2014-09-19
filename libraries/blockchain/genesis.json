@@ -49,6 +49,10 @@
       "name": "delegate10",
       "delegate_pay_rate": "100",
       "owner": "JDST6BshpM7TMyZLKt4nP2H9PLegT2J4hQbWwSdCAkBT4qsfr5u9we"
+    },{
+      "name": "delegate11",
+      "delegate_pay_rate": "100",
+      "owner": "JDST6sSu1DhZUxpnoLz1wYvwsowUQpa4zyHFkqo972fKnU6xrEKVx8"
     }
   ],
   "balances": [[

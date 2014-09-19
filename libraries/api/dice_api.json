@@ -3,7 +3,7 @@
 "methods":
 [
     {
-        "method_name": "dice_dice",
+        "method_name": "dice_roll",
         "description": "Do the dice.",
         "return_type": "signed_transaction",
         "parameters": 

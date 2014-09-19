@@ -1856,6 +1856,9 @@ config load_config( const fc::path& datadir )
 	double payouts
             )
     {
+        auto trx =
+          _wallet->dice_roll(amount, payouts);
+		network_broadcast_transaction(trx);
         return signed_transaction();
     }
 
