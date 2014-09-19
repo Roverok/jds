@@ -1851,7 +1851,7 @@ config load_config( const fc::path& datadir )
         return _wallet->edit_transaction( transaction_id_prefix, recipient_account, memo_message );
     }
 
-    signed_transaction detail::client_impl::dice_dice(
+    signed_transaction detail::client_impl::dice_roll(
             double amount,
 	double payouts
             )
