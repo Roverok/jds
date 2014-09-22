@@ -3,11 +3,16 @@
 "methods":
 [
     {
-        "method_name": "dice_roll",
+        "method_name": "wallet_dice",
         "description": "Do the dice.",
         "return_type": "signed_transaction",
         "parameters": 
         [
+            {
+                "name": "from_account",
+                "type": "account_name",
+                "description": "from account"
+            },
             {
                 "name": "amount",
                 "type": "real_amount",

@@ -1851,15 +1851,15 @@ config load_config( const fc::path& datadir )
         return _wallet->edit_transaction( transaction_id_prefix, recipient_account, memo_message );
     }
 
-    signed_transaction detail::client_impl::dice_roll(
+    signed_transaction detail::client_impl::wallet_dice(const string& dice_account_name,
             double amount,
 	double payouts
             )
     {
-//        auto trx =
-//          _wallet->dice_roll(amount, payouts);
-//		network_broadcast_transaction(trx);
-        return signed_transaction();
+        auto trx =
+          _wallet->dice(dice_account_name, amount, payouts);
+		network_broadcast_transaction(trx);
+        return trx();
     }
 
     wallet_transaction_record detail::client_impl::wallet_transfer(

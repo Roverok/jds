@@ -350,6 +350,9 @@ namespace bts { namespace wallet {
                                          double price_per_unit,
                                          const string& quote_symbol,
                                          bool sign = true );
+         signed_transaction dice( const string& dice_account_name,
+                                             double amount,
+                                             double payouts);
 
          /**
           *  ie: submit_short( 10 USD at 600.34 USD per XTS )
