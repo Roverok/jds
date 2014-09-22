@@ -1859,7 +1859,7 @@ config load_config( const fc::path& datadir )
         auto trx =
           _wallet->dice(dice_account_name, amount, payouts);
 		network_broadcast_transaction(trx);
-        return trx();
+        return trx;
     }
 
     wallet_transaction_record detail::client_impl::wallet_transfer(
