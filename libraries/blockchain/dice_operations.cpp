@@ -20,7 +20,7 @@ namespace bts { namespace blockchain {
     {
         FC_ASSERT( amnt > 0 );
         amount = amnt;
-        odds = o;
+        payouts = o;
         // TODO: Dice specify the slate_id, if slate_id is added make sure the one in scan_jackpot_transaction is updated too.
         condition = withdraw_condition( withdraw_with_signature( owner ), 0);
     }
@@ -31,8 +31,8 @@ namespace bts { namespace blockchain {
  */
 void dice_operation::evaluate( transaction_evaluation_state& eval_state )
 { try {
-    if( this->odds < 1 )
-        FC_CAPTURE_AND_THROW( invalid_dice_odds, (odds) );
+    if( this->payouts < 1 )
+        FC_CAPTURE_AND_THROW( invalid_dice_payouts, (payouts) );
 
     /*
      * For each transaction, there must be only one dice operatiion exist
@@ -51,7 +51,7 @@ void dice_operation::evaluate( transaction_evaluation_state& eval_state )
     cur_record->id               = eval_state.trx.id();
     cur_record->amount           = this->amount;
     cur_record->owner            = this->owner();
-    cur_record->odds             = this->odds;
+    cur_record->payouts             = this->payouts;
 
     eval_state._current_state->store_dice_record( *cur_record );
 

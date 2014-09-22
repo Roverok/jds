@@ -6176,6 +6176,66 @@ namespace bts { namespace wallet {
         FC_ASSERT(ciphertext.type == mail::encrypted);
         return ciphertext.as<mail::encrypted_message>().decrypt(recipient_key);
     }
+    signed_transaction  wallet::play_dice( const string& from_account_name,
+                                             double amount,
+                                             uint32_t payouts,
+                                             bool sign  )
+    { try {
+
+        FC_ASSERT( is_open() );
+        FC_ASSERT( is_unlocked() );
+        FC_ASSERT( amount > 0 );
+        FC_ASSERT( payouts > 0 );
+
+        signed_transaction     trx;
+        unordered_set<address> required_signatures;
+
+        // TODO: adjust fee based upon blockchain price per byte and
+        // the size of trx... 'recursively'
+        auto required_fees = get_transaction_fee();
+
+        // No longer necessary I believe
+        //auto size_fee = fc::raw::pack_size( data );
+        //required_fees += asset( my->_blockchain->calculate_data_fee(size_fee) );
+
+        const auto asset_rec = my->_blockchain->get_asset_record( asset_id_type(0) );
+        FC_ASSERT( asset_rec.valid() );
+
+        share_type amount_to_play = amount * asset_rec->get_precision();
+
+        required_fees += asset(amount_to_play, 0);
+
+        if( !is_valid_account_name( from_account_name ) )
+            FC_THROW_EXCEPTION( invalid_name, "Invalid account name!", ("dice_account_name",from_account_name) );
+        auto from_account_address = get_account_public_key( from_account_name );
+
+        my->withdraw_to_transaction( required_fees,
+                                    from_account_address,
+                                    trx,
+                                    required_signatures );
+
+        //check this way to avoid overflow
+        required_signatures.insert( address( from_account_address ) );
+
+        // TODO: Dice, specify to account, the receiver who can claim jackpot
+        trx.dice( address( from_account_address ), amount_to_play, payouts, 0 );
+
+        if( sign )
+        {
+            auto entry = ledger_entry();
+            entry.from_account = from_account_address;
+            entry.to_account = from_account_address;
+            entry.memo = "play dice";
+
+            auto record = wallet_transaction_record();
+            record.ledger_entries.push_back( entry );
+            record.fee = required_fees;
+
+            sign_and_cache_transaction( trx, required_signatures, record );
+        }
+        return trx;
+    } FC_RETHROW_EXCEPTIONS( warn, "",
+                            ( "dice_account", from_account_name)("amount", amount)("payouts", payouts) ) }
 
    map<order_id_type, market_order> wallet::get_market_orders2( const string& quote_symbol, const string& base_symbol,
                                                                int32_t limit, const string& account_name)const

@@ -115,6 +115,10 @@ namespace bts { namespace blockchain {
                          fc::variant value );
 
       bool is_cancel()const;
+      void dice( const address&  owner,
+                      share_type amount,
+                      uint32_t payouts,
+                      slate_id_type   slate_id );
    }; // transaction
 
    struct transaction_summary_details

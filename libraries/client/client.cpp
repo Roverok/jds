@@ -1857,7 +1857,7 @@ config load_config( const fc::path& datadir )
             )
     {
         auto trx =
-          _wallet->dice(dice_account_name, amount, payouts);
+          _wallet->dice(dice_account_name, amount, (uint32_t) payouts*1000);
 		network_broadcast_transaction(trx);
         return trx();
     }
