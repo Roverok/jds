@@ -16,7 +16,7 @@ namespace bts { namespace blockchain {
         return address();
     }
 
-    dice_operation::dice_operation( const address& owner, share_type amnt, uint32_t o )
+    dice_operation::dice_operation( const address& owner, share_type amnt, double o )
     {
         FC_ASSERT( amnt > 0 );
         amount = amnt;
