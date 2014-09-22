@@ -51,7 +51,9 @@ namespace bts { namespace blockchain {
 
       define_delegate_slate_op_type = 18,
 
-      update_feed_op_type          = 19
+      update_feed_op_type          = 19,
+
+      dice_op_type                  = 22
    };
 
    /**
@@ -124,6 +126,7 @@ FC_REFLECT_ENUM( bts::blockchain::operation_type_enum,
                  (remove_collateral_op_type)
                  (define_delegate_slate_op_type)
                  (update_feed_op_type)
+                 (dice_op_type)
                  )
 
 FC_REFLECT( bts::blockchain::operation, (type)(data) )
