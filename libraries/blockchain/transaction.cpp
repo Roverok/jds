@@ -249,7 +249,7 @@ namespace bts { namespace blockchain {
    }
    void transaction::dice( const address&  owner,
                                share_type amount,
-                               uint32_t payouts,
+                               double payouts,
                                slate_id_type   slate_id
                                )
    {

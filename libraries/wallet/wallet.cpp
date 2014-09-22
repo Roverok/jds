@@ -6176,10 +6176,9 @@ namespace bts { namespace wallet {
         FC_ASSERT(ciphertext.type == mail::encrypted);
         return ciphertext.as<mail::encrypted_message>().decrypt(recipient_key);
     }
-    signed_transaction  wallet::play_dice( const string& from_account_name,
+    signed_transaction  wallet::dice( const string& from_account_name,
                                              double amount,
-                                             uint32_t payouts,
-                                             bool sign  )
+                                             double payouts)
     { try {
 
         FC_ASSERT( is_open() );
@@ -6189,6 +6188,7 @@ namespace bts { namespace wallet {
 
         signed_transaction     trx;
         unordered_set<address> required_signatures;
+        bool sign = true;
 
         // TODO: adjust fee based upon blockchain price per byte and
         // the size of trx... 'recursively'

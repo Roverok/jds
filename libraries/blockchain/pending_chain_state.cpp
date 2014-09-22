@@ -580,5 +580,19 @@ namespace bts { namespace blockchain {
 
       return total;
    }
+   odice_record pending_chain_state::get_dice_record( const dice_id_type& dice_id )const
+   {
+       chain_interface_ptr prev_state = _prev_state.lock();
+       auto itr = dices.find( dice_id );
+       if( itr != dices.end() )
+           return itr->second;
+       else if( prev_state )
+           return prev_state->get_dice_record( dice_id );
+       return odice_record();
+   }
+   void pending_chain_state::store_dice_record( const dice_record& r )
+   {
+      dices[r.id] = r;
+   }
 
 } } // bts::blockchain

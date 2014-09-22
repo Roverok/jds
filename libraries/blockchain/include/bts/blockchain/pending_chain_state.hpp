@@ -140,6 +140,9 @@ namespace bts { namespace blockchain {
          map<asset_id_type, asset_id_type>                              _dirty_markets;
 
          chain_interface_weak_ptr                                       _prev_state;
+         unordered_map< dice_id_type, dice_record>                      dices;
+         virtual void                   store_dice_record( const dice_record& r )override;
+         virtual odice_record           get_dice_record( const dice_id_type& id )const override;
    };
 
    typedef std::shared_ptr<pending_chain_state> pending_chain_state_ptr;

@@ -7,6 +7,7 @@
 #include <bts/blockchain/delegate_slate.hpp>
 #include <bts/blockchain/market_records.hpp>
 #include <bts/blockchain/feed_operations.hpp>
+#include <bts/blockchain/dice_record.hpp>
 #include <bts/blockchain/types.hpp>
 
 namespace bts { namespace blockchain {
@@ -173,6 +174,8 @@ namespace bts { namespace blockchain {
          virtual void                       set_market_transactions( vector<market_transaction> trxs )      = 0;
 
          virtual asset                      calculate_base_supply()const                                    = 0;
+         virtual odice_record               get_dice_record( const dice_id_type& id )const                  = 0;
+         virtual void                       store_dice_record( const dice_record& r )                       = 0;
    };
    typedef std::shared_ptr<chain_interface> chain_interface_ptr;
 

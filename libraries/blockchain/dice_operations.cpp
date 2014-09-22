@@ -31,7 +31,7 @@ namespace bts { namespace blockchain {
  */
 void dice_operation::evaluate( transaction_evaluation_state& eval_state )
 { try {
-    if( this->payouts < 1 )
+    if( this->payouts <= 1 )
         FC_CAPTURE_AND_THROW( invalid_dice_payouts, (payouts) );
 
     /*

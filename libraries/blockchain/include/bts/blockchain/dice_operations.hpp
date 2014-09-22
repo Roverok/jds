@@ -11,7 +11,7 @@ namespace bts { namespace blockchain {
         static const operation_type_enum type;
         dice_operation():amount(0), payouts(2){}
 
-        dice_operation( const address& owner, share_type amnt, uint32_t odds = 1 );
+        dice_operation( const address& owner, share_type amnt, double payouts = 2 );
 
         address owner()const;
 
@@ -19,7 +19,7 @@ namespace bts { namespace blockchain {
         balance_id_type                balance_id()const;
 
         share_type          amount;
-        uint32_t            payouts;
+        double            payouts;
 
         /** the condition that the funds may be withdrawn,
          *  this is only necessary if the address is new.

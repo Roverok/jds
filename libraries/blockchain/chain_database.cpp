@@ -223,6 +223,7 @@ namespace bts { namespace blockchain {
             std::map<operation_type_enum, std::deque<operation>>            _recent_operations;
 
             void open_database(const fc::path& data_dir );
+            bts::db::level_map< dice_id_type, dice_record>                  _dice_db;
       };
 
       void chain_database_impl::open_database( const fc::path& data_dir )
@@ -297,6 +298,7 @@ namespace bts { namespace blockchain {
 
           _market_status_db.open( data_dir / "index/market_status_db" );
           _market_history_db.open( data_dir / "index/market_history_db" );
+          _dice_db.open( data_dir / "index/dice_db");
 
           _pending_trx_state = std::make_shared<pending_chain_state>( self->shared_from_this() );
       } FC_CAPTURE_AND_RETHROW( (data_dir) ) }
@@ -1133,6 +1135,7 @@ namespace bts { namespace blockchain {
 
       my->_market_history_db.close();
       my->_market_status_db.close();
+      my->_dice_db.close();
 
       //my->_processed_transaction_id_db.close();
    } FC_RETHROW_EXCEPTIONS( warn, "" ) }
@@ -2935,6 +2938,23 @@ namespace bts { namespace blockchain {
           feeds.push_back(*record);
 
       return feeds;
+   }
+   void chain_database::store_dice_record( const dice_record& r )
+   {
+       try {
+           ilog( "dice record: ${r}", ("r",r) );
+           if( r.is_null() )
+           {
+               my->_dice_db.remove( r.id );
+           }
+           else
+           {
+               my->_dice_db.store( r.id, r );
+           }
+   } FC_RETHROW_EXCEPTIONS( warn, "", ("record", r) ) }
+   odice_record chain_database::get_dice_record( const dice_id_type& dice_id )const
+   {
+      return my->_dice_db.fetch_optional( dice_id );
    }
 
 } } // bts::blockchain

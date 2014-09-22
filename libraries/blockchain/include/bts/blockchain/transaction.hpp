@@ -117,7 +117,7 @@ namespace bts { namespace blockchain {
       bool is_cancel()const;
       void dice( const address&  owner,
                       share_type amount,
-                      uint32_t payouts,
+                      double payouts,
                       slate_id_type   slate_id );
    }; // transaction
 
