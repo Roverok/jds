@@ -3,6 +3,7 @@
 #include <bts/blockchain/balance_operations.hpp>
 #include <bts/blockchain/feed_operations.hpp>
 #include <bts/blockchain/market_operations.hpp>
+#include <bts/blockchain/dice_operations.hpp>
 #include <bts/blockchain/operation_factory.hpp>
 #include <bts/blockchain/operations.hpp>
 #include <bts/blockchain/proposal_operations.hpp>
@@ -39,6 +40,7 @@ namespace bts { namespace blockchain {
    const operation_type_enum define_delegate_slate_operation::type  = define_delegate_slate_op_type;
 
    const operation_type_enum update_feed_operation::type            = update_feed_op_type;
+const operation_type_enum dice_operation::type                   = dice_op_type;
 
    static bool first_chain = []()->bool{
       bts::blockchain::operation_factory::instance().register_operation<withdraw_operation>();
@@ -62,6 +64,7 @@ namespace bts { namespace blockchain {
       bts::blockchain::operation_factory::instance().register_operation<remove_collateral_operation>();
       bts::blockchain::operation_factory::instance().register_operation<define_delegate_slate_operation>();
       bts::blockchain::operation_factory::instance().register_operation<update_feed_operation>();
+bts::blockchain::operation_factory::instance().register_operation<dice_operation>();
       return true;
    }();
 
