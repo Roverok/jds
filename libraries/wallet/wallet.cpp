@@ -359,6 +359,67 @@ const time_point_sec& received_time);
               _wallet_db.store_transaction( record );
           }
       } FC_CAPTURE_AND_RETHROW() }
+void wallet_impl::scan_jackpot_transaction(const jackpot_transaction& trx,
+                                           uint32_t block_num,
+                                           const time_point_sec& block_time,
+                                           const time_point_sec& received_time)
+{ try {
+    const auto win = ( trx.jackpot_received != 0 );
+    const auto play_result = string( win ? "win" : "lose" );
+    
+    // TODO: Dice, play owner might be different with jackpot owner
+    auto okey_jackpot = _wallet_db.lookup_key( trx.jackpot_owner );
+    if( okey_jackpot && okey_jackpot->has_private_key() )
+    {
+        auto jackpot_account_key = _wallet_db.lookup_key( okey_jackpot->account_address );
+        
+        auto bal_rec = _blockchain->get_balance_record( withdraw_condition(
+                                                                           withdraw_with_signature(trx.jackpot_owner), 0 ).get_address() );
+        if( bal_rec )
+        {
+            //wlog( "BAL RECORD ${R}", ("R", bal_rec) );
+            _wallet_db.cache_balance( *bal_rec );
+        }
+        
+        /* What we paid */
+        /*
+        auto out_entry = ledger_entry();
+        out_entry.from_account = jackpot_account_key;
+        out_entry.amount = asset( trx.play_amount );
+        std::stringstream out_memo_ss;
+        out_memo_ss << "play dice with odds: " << trx.odds;
+        out_entry.memo = out_memo_ss.str();
+         */
+        
+        /* What we received */
+        auto in_entry = ledger_entry();
+        in_entry.to_account = jackpot_account_key->public_key;
+        in_entry.amount = asset(trx.jackpot_received);
+        
+        std::stringstream in_memo_ss;
+        in_memo_ss << play_result << "jackpot with lucky number: " << trx.lucky_number;
+        in_entry.memo = in_memo_ss.str();
+        
+        std::stringstream id_ss;
+        id_ss << block_num << self->get_key_label( okey_jackpot->public_key ) << "0";
+        
+        // TODO: Don't blow away memo, etc.
+        auto record = wallet_transaction_record();
+        record.record_id = fc::ripemd160::hash( id_ss.str() );
+        record.block_num = block_num;
+        record.is_virtual = true;
+        record.is_confirmed = true;
+        record.is_market = true;
+        //record.ledger_entries.push_back( out_entry );
+        record.ledger_entries.push_back( in_entry );
+        record.fee = asset(0);    // TODO: Dice, do we need fee for claim jackpot? may be later we'll support part to delegates
+        record.created_time = block_time;
+        record.received_time = received_time;
+        
+        _wallet_db.store_transaction( record );
+    }
+     
+} FC_CAPTURE_AND_RETHROW() }
 
       vector<wallet_transaction_record> wallet_impl::get_pending_transactions()const
       {
