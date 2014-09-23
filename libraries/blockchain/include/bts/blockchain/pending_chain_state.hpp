@@ -109,6 +109,8 @@ namespace bts { namespace blockchain {
 
          // NOTE: this isn't really part of the chain state, but more part of the block state
          vector<market_transaction>                                     market_transactions;
+vector<jackpot_transaction>                                    jackpot_transactions;
+virtual void                   set_jackpot_transactions( vector<jackpot_transaction> trxs ) override;
 
          unordered_map< asset_id_type, asset_record>                    assets;
          unordered_map< slate_id_type, delegate_slate>                  slates;

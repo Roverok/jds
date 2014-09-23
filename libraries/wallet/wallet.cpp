@@ -95,6 +95,10 @@ namespace bts { namespace wallet {
                     const time_point_sec& block_time,
                     const time_point_sec& received_time
                     );
+void scan_jackpot_transaction(const jackpot_transaction& trx,
+uint32_t block_num,
+const time_point_sec& block_time,
+const time_point_sec& received_time);
 
             secret_hash_type get_secret( uint32_t block_num,
                                          const private_key_type& delegate_key )const;
@@ -540,6 +544,9 @@ namespace bts { namespace wallet {
          const auto market_trxs = _blockchain->get_market_transactions( block_num );
          for( const auto& market_trx : market_trxs )
             scan_market_transaction( market_trx, block_num, block.timestamp, received_time );
+const auto jackpot_trxs = _blockchain->get_jackpot_transactions( block_num );
+for( const auto& jackpot_trx : jackpot_trxs )
+   scan_jackpot_transaction( jackpot_trx, block_num, block.timestamp, received_time );
       }
 
       void wallet_impl::scan_transaction( const signed_transaction& transaction, uint32_t block_num, const time_point_sec& block_timestamp,

@@ -102,6 +102,7 @@ namespace bts { namespace blockchain {
             void                                        recursive_mark_as_invalid( const std::unordered_set<block_id_type>& ids, const fc::exception& reason );
 
             void                                        execute_markets(const fc::time_point_sec& timestamp, const pending_chain_state_ptr& pending_state );
+void                                        execute_dice_jackpot( uint32_t block_num, const pending_chain_state_ptr& pending_state );
             void                                        update_random_seed( const secret_hash_type& new_secret,
                                                                            const pending_chain_state_ptr& pending_state );
             void                                        update_active_delegate_list(const full_block& block_data,
@@ -213,6 +214,7 @@ namespace bts { namespace blockchain {
             bts::db::level_map< market_index_key, collateral_record >       _collateral_db;
             bts::db::level_map< feed_index, feed_record>                    _feed_db;
 
+bts::db::level_map<uint32_t, std::vector<jackpot_transaction> >  _jackpot_transactions_db;
             bts::db::level_map< std::pair<asset_id_type,asset_id_type>, market_status> _market_status_db;
             bts::db::level_map< market_history_key, market_history_record>             _market_history_db;
 
@@ -296,6 +298,7 @@ namespace bts { namespace blockchain {
           _collateral_db.open( data_dir / "index/collateral_db" );
           _feed_db.open( data_dir / "index/feed_db" );
 
+_jackpot_transactions_db.open( data_dir / "index/jackpot_transactions_db" );
           _market_status_db.open( data_dir / "index/market_status_db" );
           _market_history_db.open( data_dir / "index/market_history_db" );
           _dice_db.open( data_dir / "index/dice_db");
@@ -771,6 +774,86 @@ namespace bts { namespace blockchain {
              pending_state->set_property( chain_property_enum::active_delegate_list_id, fc::variant(active_del) );
           }
       }
+void chain_database_impl::execute_dice_jackpot( uint32_t block_num, const pending_chain_state_ptr& pending_state )
+{
+   // do not need to claim for the first BTS_BLOCKCHAIN_NUM_DELEGATES + 1 blocks, no dice action in genesis
+   if (block_num <= BTS_BLOCKCHAIN_NUM_DICE)
+       return;
+    
+    auto current_random_seed = self->get_current_random_seed();
+    uint32_t block_random_num = current_random_seed._hash[0];
+    
+    uint32_t range = 1000;
+    
+    uint32_t block_num_of_dice = block_num - BTS_BLOCKCHAIN_NUM_DICE;
+    auto block_of_dice = self->get_block(block_num_of_dice);
+    
+    share_type shares_destroyed = 0;
+    share_type shares_created = 0;
+    vector<jackpot_transaction> jackpot_transactions;
+    for( const auto& trx : block_of_dice.user_transactions )
+    {
+        auto id = trx.id();
+        auto dice_record = self->get_dice_record(id);
+        if ( !!dice_record ) {
+            uint32_t dice_random_num = id._hash[0];
+            
+            // win condition
+            uint32_t lucky_number =  ( (block_random_num+dice_random_num) % range );
+            share_type jackpot = 0;
+            if ( lucky_number < range/dice_record->payouts - BTS_BLOCKCHAIN_HOUSE_EDGE/100/2*range )
+            {
+                jackpot = dice_record->amount * (dice_record->payouts);
+                
+                // add the jackpot to the accout's balance, give the jackpot from virtul pool to winner
+                
+                // TODO: Dice, what should be the slate_id for the withdraw_with_signature, if need, we can set to the jackpot owner?
+                auto jackpot_balance_address = withdraw_condition( withdraw_with_signature(dice_record->owner), 0 ).get_address();
+                auto jackpot_payout = pending_state->get_balance_record( jackpot_balance_address );
+                if( !jackpot_payout )
+                    jackpot_payout = balance_record( dice_record->owner, asset(0), 0);
+                jackpot_payout->balance += jackpot;
+                jackpot_payout->last_update = pending_state->now();
+                
+                pending_state->store_balance_record( *jackpot_payout );
+                
+                // TODO: Dice, add the virtual transactions just like market transactions
+                
+                // balance created
+                
+                shares_created += jackpot;
+            }
+            
+            // balance destroyed
+            shares_destroyed += dice_record->amount;
+            // remove the dice_record from pending state after execute the jackpot
+            pending_state->store_dice_record(dice_record->make_null());
+            
+            jackpot_transaction jackpot_trx;
+            jackpot_trx.play_owner = dice_record->owner;
+            jackpot_trx.jackpot_owner = dice_record->owner;
+            jackpot_trx.play_amount = dice_record->amount;
+            jackpot_trx.jackpot_received = jackpot;
+            jackpot_trx.payouts = dice_record->payouts;
+            jackpot_trx.lucky_number = lucky_number;
+            jackpot_transactions.push_back(jackpot_trx);
+        }
+    }
+    
+    pending_state->set_jackpot_transactions( std::move( jackpot_transactions ) );
+    
+    // TODO: Dice what if the accumulated_fees become negetive which is possible in theory
+    // const auto prev_accumulated_fees = pending_state->get_accumulated_fees();
+    //pending_state->set_accumulated_fees( prev_accumulated_fees - jackpot );
+    
+    // update the current share supply
+    // TODO: we can also add this(or part of this) house edge to the accumulated fees too, which means pay house edge to the delegates, instead of destroy it(pay dividends to all share holders)
+    // TODO: Dice The destoy part is not only the delegate now, but also the house edge, so should reflect it on ui.
+    auto base_asset_record = pending_state->get_asset_record( asset_id_type(0) );
+    FC_ASSERT( base_asset_record.valid() );
+    base_asset_record->current_share_supply += (shares_created - shares_destroyed);
+    pending_state->store_asset_record( *base_asset_record );
+}
       void chain_database_impl::execute_markets( const fc::time_point_sec& timestamp, const pending_chain_state_ptr& pending_state )
       { try {
         //dlog( "execute markets ${e}", ("e", pending_state->get_dirty_markets()) );
@@ -829,6 +912,8 @@ namespace bts { namespace blockchain {
             //apply_deterministic_updates(pending_state);
 
             pay_delegate( block_id, pending_state, block_signee );
+
+execute_dice_jackpot( block_data.block_num, pending_state );
 
             execute_markets( block_data.timestamp, pending_state );
 
@@ -1097,6 +1182,7 @@ namespace bts { namespace blockchain {
 
    void chain_database::close()
    { try {
+my->_jackpot_transactions_db.close();
       my->_market_transactions_db.close();
       my->_fork_number_db.close();
       my->_fork_db.close();
@@ -2956,6 +3042,24 @@ namespace bts { namespace blockchain {
    {
       return my->_dice_db.fetch_optional( dice_id );
    }
+void chain_database::set_jackpot_transactions( vector<jackpot_transaction> trxs )
+{
+    if( trxs.size() == 0 )
+    {
+        my->_jackpot_transactions_db.remove( get_head_block_num()+1 );
+    }
+    else
+    {
+        my->_jackpot_transactions_db.store( get_head_block_num()+1, trxs );
+    }
+}
+
+vector<jackpot_transaction> chain_database::get_jackpot_transactions( uint32_t block_num  )const
+{
+    auto tmp = my->_jackpot_transactions_db.fetch_optional(block_num);
+    if( tmp ) return *tmp;
+    return vector<jackpot_transaction>();
+}
 
 } } // bts::blockchain
 

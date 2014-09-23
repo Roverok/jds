@@ -257,6 +257,8 @@ namespace bts { namespace blockchain {
 
          // TODO: Specify order type and/or market
          optional<market_order>             get_market_order( const order_id_type& order_id )const;
+virtual void                       set_jackpot_transactions( vector<jackpot_transaction> trxs );
+vector<jackpot_transaction>        get_jackpot_transactions( uint32_t block_num  )const;
 
          void                               scan_assets( function<void( const asset_record& )> callback );
          void                               scan_balances( function<void( const balance_record& )> callback );

@@ -71,6 +71,7 @@ namespace bts { namespace blockchain {
       {
          for( const auto& item : items.second )    prev_state->store_recent_operation( item );
       }
+prev_state->set_jackpot_transactions( jackpot_transactions );
       prev_state->set_market_transactions( market_transactions );
       prev_state->set_dirty_markets(_dirty_markets);
    }
@@ -505,6 +506,10 @@ namespace bts { namespace blockchain {
    {
       market_transactions = std::move(trxs);
    }
+void pending_chain_state::set_jackpot_transactions( vector<jackpot_transaction> trxs )
+{
+   jackpot_transactions = std::move(trxs);
+}
 
    omarket_status pending_chain_state::get_market_status( const asset_id_type& quote_id, const asset_id_type& base_id )
    {
