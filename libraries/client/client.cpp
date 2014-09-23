@@ -2128,6 +2128,25 @@ config load_config( const fc::path& datadir )
       return _chain_db->get_transaction(id, exact);
     }
 
+vector<jackpot_transaction> detail::client_impl::blockchain_get_jackpot_transactions( const string& block )const
+{
+  try
+  {
+      ASSERT_TASK_NOT_PREEMPTED(); // make sure no cancel gets swallowed by catch(...)
+      uint32_t num;
+      if( block.size() == 40 )
+          num = _chain_db->get_block_digest(block_id_type( block )).block_num;
+      else
+          num = std::stoi( block );
+    return _chain_db->get_jackpot_transactions(num);
+  }
+  catch( ... )
+  {
+  }
+  return optional<digest_block>();
+}
+    
+
     optional<digest_block> detail::client_impl::blockchain_get_block( const string& block )const
     {
       try

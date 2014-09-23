@@ -1,5 +1,5 @@
 {
-"category": "DNS Methods",
+"category": "Dice Methods",
 "methods":
 [
     {
@@ -26,5 +26,21 @@
         ],
         "prerequisites": ["wallet_open", "wallet_unlocked"]
     }
+,
+{
+    "method_name": "blockchain_get_jackpot_transactions",
+    "description": "Do the dice.",
+    "return_type": "jackpot_transaction_array",
+    "parameters": 
+    [
+        {
+"name" : "block",
+"type" : "string",
+"description" : "block number or ID to retrieve"
+        }
+    ],
+    "prerequisites": ["json_authenticated"]
+}
+
 ]
 }
