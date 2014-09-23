@@ -71,6 +71,7 @@ namespace bts { namespace blockchain {
       {
          for( const auto& item : items.second )    prev_state->store_recent_operation( item );
       }
+      for ( const auto& item : dices )          prev_state->store_dice_record(item.second);
 prev_state->set_jackpot_transactions( jackpot_transactions );
       prev_state->set_market_transactions( market_transactions );
       prev_state->set_dirty_markets(_dirty_markets);
