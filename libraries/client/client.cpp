@@ -2127,8 +2127,9 @@ config load_config( const fc::path& datadir )
       auto id = variant( transaction_id ).as<transaction_id_type>();
       return _chain_db->get_transaction(id, exact);
     }
+    
 
-vector<jackpot_transaction> detail::client_impl::blockchain_get_jackpot_transactions( const string& block )const
+vector<bts::blockchain::jackpot_transaction> detail::client_impl::blockchain_get_jackpot_transactions( const string& block )
 {
   try
   {
@@ -2139,11 +2140,7 @@ vector<jackpot_transaction> detail::client_impl::blockchain_get_jackpot_transact
       else
           num = std::stoi( block );
     return _chain_db->get_jackpot_transactions(num);
-  }
-  catch( ... )
-  {
-  }
-  return optional<digest_block>();
+} FC_RETHROW_EXCEPTIONS( warn, "", ("block",block) ) 
 }
     
 
