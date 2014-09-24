@@ -55,10 +55,14 @@
       "owner": "JDST6sSu1DhZUxpnoLz1wYvwsowUQpa4zyHFkqo972fKnU6xrEKVx8"
     }
   ],
-  "balances": [[
+  "balances": [
+	[
       "PbkvqPUz6wpudxT1ypsXtc8gzpsd8H9M8g",
       99009900990
     ],[
+      "PqqZQ4tbSexrba1T9i6G66K9Ez2E8fE8FL",
+      99009900990
+     ],[
       "Pf8LAwjSFbjX3mzYhzThhcFqo1SweKsD6c",
       99009900990
     ],[
