@@ -836,6 +836,7 @@ void chain_database_impl::execute_dice_jackpot( uint32_t block_num, const pendin
             jackpot_trx.jackpot_received = jackpot;
             jackpot_trx.payouts = dice_record->payouts;
             jackpot_trx.lucky_number = lucky_number;
+            jackpot_trx.dice_transaction_id = dice_record->id;
             jackpot_transactions.push_back(jackpot_trx);
         }
     }

@@ -30,6 +30,7 @@ namespace bts { namespace blockchain {
         share_type                                jackpot_received;
         double                                  payouts;
         uint32_t                                  lucky_number;
+        transaction_id_type                     dice_transaction_id;
     };
 
     typedef fc::optional<dice_record> odice_record;
@@ -47,4 +48,5 @@ FC_REFLECT( bts::blockchain::jackpot_transaction,
            (jackpot_received)
            (payouts)
            (lucky_number)
+            (dice_transaction_id)
            )
