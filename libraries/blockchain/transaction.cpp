@@ -250,11 +250,12 @@ namespace bts { namespace blockchain {
    void transaction::dice( const address&  owner,
                                share_type amount,
                                double payouts,
+                               bool roll_high,
                                slate_id_type   slate_id
                                )
    {
        FC_ASSERT( amount > 0 );
-       operations.push_back( dice_operation(owner, amount, payouts) );
+       operations.push_back( dice_operation(owner, amount, payouts, roll_high) );
    }
 
 } } // bts::blockchain

@@ -23,6 +23,13 @@
                 "type": "real_amount",
                 "description": "payout rate"
             }
+            ,
+            {
+                "name": "roll_high",
+                "type" : "bool",
+                "default_value":false,
+                "description": "high or low"
+            }
         ],
         "prerequisites": ["wallet_open", "wallet_unlocked"]
     }

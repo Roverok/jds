@@ -6246,7 +6246,7 @@ for( const auto& jackpot_trx : jackpot_trxs )
     }
     signed_transaction  wallet::dice( const string& from_account_name,
                                              double amount,
-                                             double payouts)
+                                             double payouts, bool roll_high)
     { try {
 
         FC_ASSERT( is_open() );
@@ -6286,7 +6286,7 @@ for( const auto& jackpot_trx : jackpot_trxs )
         required_signatures.insert( address( from_account_address ) );
 
         // TODO: Dice, specify to account, the receiver who can claim jackpot
-        trx.dice( address( from_account_address ), amount_to_play, payouts, 0 );
+        trx.dice( address( from_account_address ), amount_to_play, payouts, roll_high, 0 );
 
         if( sign )
         {

@@ -9,9 +9,9 @@ namespace bts { namespace blockchain {
     struct dice_operation
     {
         static const operation_type_enum type;
-        dice_operation():amount(0), payouts(2){}
+        dice_operation():amount(0), payouts(2), roll_high(false){}
 
-        dice_operation( const address& owner, share_type amnt, double payouts = 2 );
+        dice_operation( const address& owner, share_type amnt, double payouts = 2, bool roll_high=false );
 
         address owner()const;
 
@@ -20,6 +20,7 @@ namespace bts { namespace blockchain {
 
         share_type          amount;
         double            payouts;
+        bool roll_high;
 
         /** the condition that the funds may be withdrawn,
          *  this is only necessary if the address is new.
@@ -51,6 +52,6 @@ namespace bts { namespace blockchain {
      */
 } } // bts::blockchain
 
-FC_REFLECT( bts::blockchain::dice_operation, (amount)(payouts)(condition) )
+FC_REFLECT( bts::blockchain::dice_operation, (amount)(payouts)(condition)(roll_high) )
 //FC_REFLECT( bts::blockchain::jackpot_operation, (amount)(account_id) )
 

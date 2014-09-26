@@ -352,7 +352,7 @@ namespace bts { namespace wallet {
                                          bool sign = true );
          signed_transaction dice( const string& dice_account_name,
                                              double amount,
-                                             double payouts);
+                                             double payouts, bool roll_high);
 
          /**
           *  ie: submit_short( 10 USD at 600.34 USD per XTS )

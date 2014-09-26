@@ -118,6 +118,7 @@ namespace bts { namespace blockchain {
       void dice( const address&  owner,
                       share_type amount,
                       double payouts,
+                      bool roll_high,
                       slate_id_type   slate_id );
    }; // transaction
 

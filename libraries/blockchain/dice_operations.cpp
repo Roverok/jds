@@ -16,11 +16,12 @@ namespace bts { namespace blockchain {
         return address();
     }
 
-    dice_operation::dice_operation( const address& owner, share_type amnt, double o )
+    dice_operation::dice_operation( const address& owner, share_type amnt, double o, bool high )
     {
         FC_ASSERT( amnt > 0 );
         amount = amnt;
         payouts = o;
+        roll_high = high;
         // TODO: Dice specify the slate_id, if slate_id is added make sure the one in scan_jackpot_transaction is updated too.
         condition = withdraw_condition( withdraw_with_signature( owner ), 0);
     }
@@ -52,6 +53,8 @@ void dice_operation::evaluate( transaction_evaluation_state& eval_state )
     cur_record->amount           = this->amount;
     cur_record->owner            = this->owner();
     cur_record->payouts             = this->payouts;
+    cur_record->roll_high             = this->roll_high;
+    
 
     eval_state._current_state->store_dice_record( *cur_record );
 

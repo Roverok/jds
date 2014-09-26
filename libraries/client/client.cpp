@@ -1854,11 +1854,11 @@ config load_config( const fc::path& datadir )
 
     signed_transaction detail::client_impl::wallet_dice(const string& dice_account_name,
             double amount,
-	double payouts
+	double payouts, bool roll_high
             )
     {
         auto trx =
-          _wallet->dice(dice_account_name, amount, payouts);
+          _wallet->dice(dice_account_name, amount, payouts, roll_high);
 		network_broadcast_transaction(trx);
         return trx;
     }
