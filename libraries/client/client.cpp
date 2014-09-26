@@ -2008,7 +2008,6 @@ config load_config( const fc::path& datadir )
     	      {
     	          return vector<dice_transaction_record>( history.end() - abs( limit ), history.end() );
     	      }
-    	      return history_records;
     } FC_RETHROW_EXCEPTIONS( warn, "") }
 
     vector<pretty_transaction> detail::client_impl::wallet_account_transaction_history( const string& account_name,
