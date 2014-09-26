@@ -1992,7 +1992,23 @@ config load_config( const fc::path& datadir )
     	       for( const auto& item : tx_history ) {
     	    	   dice_transaction_record record;
     	    	   record.transaction = item;
-    	    	   record.has_jackpot =
+    	    	   if (item.is_virtual)
+    	    		   continue;
+    	    	   vector<jackpot_transaction> jackpots = _chain_db->get_jackpot_transactions(item.block_num+BTS_BLOCKCHAIN_NUM_DICE);
+    	    	   bool jackpot_found = false;
+    	    	   for (const auto& jackpot : jackpots) {
+    	    		   if (jackpot.dice_transaction_id == item.record_id) {
+    	    			   jackpot_found = true;
+    	    			   record.jackpot = jackpot;
+    	    		   }
+    	    	   }
+				   record.has_jackpot = jackpot_found;
+    	    	   if (!jackpot_found) {
+					   auto dice_record = _chain_db->get_dice_record(item.record_id);
+					   if ( !dice_record )
+						   continue;
+					   record.dice = *dice_record;
+    	    	   }
     	    	   history.push_back( record );
     	       }
 

@@ -15,6 +15,7 @@ namespace bts { namespace wallet {
 }}
 FC_REFLECT( bts::wallet::dice_transaction_record,
            (transaction)
+           (has_jackpot)
            (dice)
            (jackpot)
            )
