@@ -1861,6 +1861,16 @@ config load_config( const fc::path& datadir )
 		network_broadcast_transaction(trx);
         return trx;
     }
+    vector<dice_transaction_record> detail::client_impl::wallet_account_dice_transaction_history( const string& account_name,
+                                                                                        const string& asset_symbol,
+                                                                                        int32_t limit,
+                                                                                        uint32_t start_block_num,
+                                                                                        uint32_t end_block_num )const
+    {
+    	try{
+    	      vector<dice_transaction_record> history_records;
+    	      return history_records;
+	} FC_RETHROW_EXCEPTIONS( warn, "") }
 
     wallet_transaction_record detail::client_impl::wallet_transfer(
             double amount_to_transfer,

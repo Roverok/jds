@@ -307,15 +307,6 @@
          "container_type" : "array",
          "contained_type" : "market_order"
       },
-{
-   "type_name" : "jackpot_transaction",
-   "cpp_return_type" : "bts::blockchain::jackpot_transaction"
-},
-{
-   "type_name" : "jackpot_transaction_array",
-   "container_type" : "array",
-   "contained_type" : "jackpot_transaction"
-},
       {
          "type_name" : "order_id",
          "cpp_return_type" : "bts::blockchain::order_id_type"

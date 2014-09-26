@@ -41,6 +41,70 @@
     ],
     "prerequisites": ["json_authenticated"]
 }
+,
+{
+    "method_name": "wallet_account_dice_transaction_history",
+    "description": "Get dice transaction history.",
+    "return_type": "dice_transaction_record_array",
+    "parameters": 
+    [
+            {
+              "name" : "account_name",
+              "type" : "string",
+              "description" : "the name of the account for which the transaction history will be returned, \"\" for all accounts",
+              "example" : "alice",
+              "default_value" : ""
+            },
+            {
+               "name" : "asset_symbol",
+               "type" : "string",
+               "description" : "only include transactions involving the specified asset, or \"\" to include all",
+               "default_value" : ""
+            },
+            {
+               "name" : "limit",
+               "type" : "int32_t",
+               "description" : "limit the number of returned transactions; negative for most recent and positive for least recent. 0 does not limit",
+               "default_value" : 0
+            },
+            {
+               "name" : "start_block_num",
+               "type" : "uint32_t",
+               "description" : "the earliest block number to list transactions from; 0 to include all transactions starting from genesis",
+               "default_value" : 0
+            },
+            {
+               "name" : "end_block_num",
+               "type" : "uint32_t",
+               "description" : "the latest block to list transaction from; -1 to include all transactions ending at the head block",
+               "default_value" : -1
+            }
+    ],
+    "prerequisites": ["wallet_open"]
+}
 
+]
+,
+  "type_map":
+    [
+{
+   "type_name" : "jackpot_transaction",
+   "cpp_return_type" : "bts::blockchain::jackpot_transaction"
+},
+{
+   "type_name" : "jackpot_transaction_array",
+   "container_type" : "array",
+   "contained_type" : "jackpot_transaction"
+}
+,
+{
+   "type_name" : "dice_transaction_record",
+   "cpp_return_type" : "bts::blockchain::dice_transaction_record"
+},
+{
+   "type_name" : "dice_transaction_record_array",
+   "container_type" : "array",
+   "contained_type" : "dice_transaction_record"
+}
 ]
 }

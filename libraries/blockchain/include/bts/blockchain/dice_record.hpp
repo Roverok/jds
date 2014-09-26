@@ -33,6 +33,9 @@ namespace bts { namespace blockchain {
         transaction_id_type                     dice_transaction_id;
     };
 
+    struct dice_transaction_record {
+
+    };
     typedef fc::optional<dice_record> odice_record;
 
 } } // bts::blockchain
