@@ -1989,6 +1989,8 @@ config load_config( const fc::path& datadir )
     	try{
     	      vector<dice_transaction_record> history;
     	      vector<wallet_transaction_record> tx_history = _wallet->get_transaction_history(account_name, start_block_num, end_block_num, asset_symbol);
+    	      vector<wallet_transaction_record> pending = _wallet->get_pending_transactions();
+    	      tx_history.insert(tx_history.end(), pending.begin(), pending.end());
     	       const auto sorter = []( const wallet_transaction_record& a, const wallet_transaction_record& b ) -> bool
     	       {
     	           if( a.received_time != b.received_time)
