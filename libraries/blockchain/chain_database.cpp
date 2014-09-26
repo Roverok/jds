@@ -803,7 +803,7 @@ void chain_database_impl::execute_dice_jackpot( uint32_t block_num, const pendin
             share_type jackpot = 0;
             bool lowWin = lucky_number < range/dice_record->payouts - BTS_BLOCKCHAIN_HOUSE_EDGE/100/2*range;
             bool hiWin = lucky_number > range/dice_record->payouts + BTS_BLOCKCHAIN_HOUSE_EDGE/100/2*range;
-            if ( (dice_record.roll_high && hiWin) || (!dice_record.roll_high && lowWin) )
+            if ( (dice_record->roll_high && hiWin) || (!dice_record->roll_high && lowWin) )
             {
                 jackpot = dice_record->amount * (dice_record->payouts);
                 
