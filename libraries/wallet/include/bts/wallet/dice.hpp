@@ -8,7 +8,7 @@ namespace bts { namespace wallet {
 
     struct dice_transaction_record {
     	wallet_transaction_record transaction;
-    	bool hasJackpot;
+    	bool has_jackpot;
     	dice_record dice;
     	jackpot_transaction jackpot;
     };

@@ -1992,6 +1992,7 @@ config load_config( const fc::path& datadir )
     	       for( const auto& item : tx_history ) {
     	    	   dice_transaction_record record;
     	    	   record.transaction = item;
+    	    	   record.has_jackpot =
     	    	   history.push_back( record );
     	       }
 
