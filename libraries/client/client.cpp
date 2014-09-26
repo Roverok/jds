@@ -1989,7 +1989,18 @@ config load_config( const fc::path& datadir )
     	try{
     	      vector<dice_transaction_record> history;
     	      vector<wallet_transaction_record> tx_history = _wallet->get_transaction_history(account_name, start_block_num, end_block_num, asset_symbol);
-    	       for( const auto& item : tx_history ) {
+    	       const auto sorter = []( const wallet_transaction_record& a, const wallet_transaction_record& b ) -> bool
+    	       {
+				   return a.block_num < b.block_num;
+
+    	           if( a.received_time != b.received_time)
+    	               return a.received_time < b.received_time;
+
+    	           return string( a.record_id ).compare( string( b.record_id ) ) < 0;
+    	       };
+    	       std::sort( tx_history.begin(), tx_history.end(), sorter );
+
+    	      for( const auto& item : tx_history ) {
     	    	   dice_transaction_record record;
     	    	   record.transaction = item;
     	    	   if (item.is_virtual)
