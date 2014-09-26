@@ -4,6 +4,7 @@ add_library( bts_wallet
              wallet_records.cpp
              wallet_db.cpp
              wallet.cpp 
+             dice.cpp 
              ${HEADERS}
            )
 

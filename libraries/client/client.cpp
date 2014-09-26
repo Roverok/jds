@@ -1,6 +1,7 @@
 #define DEFAULT_LOGGER "client"
 
 #include <bts/client/client.hpp>
+#include <bts/wallet/dice.hpp>
 #include <bts/client/messages.hpp>
 #include <bts/client/notifier.hpp>
 #include <bts/cli/cli.hpp>
@@ -1861,16 +1862,6 @@ config load_config( const fc::path& datadir )
 		network_broadcast_transaction(trx);
         return trx;
     }
-    vector<dice_transaction_record> detail::client_impl::wallet_account_dice_transaction_history( const string& account_name,
-                                                                                        const string& asset_symbol,
-                                                                                        int32_t limit,
-                                                                                        uint32_t start_block_num,
-                                                                                        uint32_t end_block_num )const
-    {
-    	try{
-    	      vector<dice_transaction_record> history_records;
-    	      return history_records;
-	} FC_RETHROW_EXCEPTIONS( warn, "") }
 
     wallet_transaction_record detail::client_impl::wallet_transfer(
             double amount_to_transfer,
@@ -1988,6 +1979,37 @@ config load_config( const fc::path& datadir )
     { try {
       return _wallet->get_account( account_name );
     } FC_RETHROW_EXCEPTIONS( warn, "", ("account_name",account_name) ) }
+
+    vector<dice_transaction_record> detail::client_impl::wallet_account_dice_transaction_history( const string& account_name,
+                                                                                        const string& asset_symbol,
+                                                                                        int32_t limit,
+                                                                                        uint32_t start_block_num,
+                                                                                        uint32_t end_block_num )const
+    {
+    	try{
+    	      vector<dice_transaction_record> history;
+    	      vector<wallet_transaction_record> tx_history = _wallet->get_transaction_history(account_name, start_block_num, end_block_num, asset_symbol);
+    	       for( const auto& item : tx_history ) {
+    	    	   dice_transaction_record record;
+    	    	   record.transaction = item;
+    	    	   history.push_back( record );
+    	       }
+
+    //    	      const auto history = _wallet->get_pretty_transaction_history( account_name, start_block_num, end_block_num, asset_symbol );
+    	      if( limit == 0 || abs( limit ) >= history.size() )
+    	      {
+    	          return history;
+    	      }
+    	      else if( limit > 0 )
+    	      {
+    	          return vector<dice_transaction_record>( history.begin(), history.begin() + limit );
+    	      }
+    	      else
+    	      {
+    	          return vector<dice_transaction_record>( history.end() - abs( limit ), history.end() );
+    	      }
+    	      return history_records;
+    } FC_RETHROW_EXCEPTIONS( warn, "") }
 
     vector<pretty_transaction> detail::client_impl::wallet_account_transaction_history( const string& account_name,
                                                                                         const string& asset_symbol,

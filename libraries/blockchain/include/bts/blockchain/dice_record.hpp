@@ -2,7 +2,6 @@
 #include <bts/blockchain/types.hpp>
 #include <bts/blockchain/withdraw_types.hpp>
 #include <bts/blockchain/transaction.hpp>
-
 namespace bts { namespace blockchain {
 	typedef transaction_id_type                dice_id_type;
 
@@ -31,10 +30,6 @@ namespace bts { namespace blockchain {
         double                                  payouts;
         uint32_t                                  lucky_number;
         transaction_id_type                     dice_transaction_id;
-    };
-
-    struct dice_transaction_record {
-
     };
     typedef fc::optional<dice_record> odice_record;
 

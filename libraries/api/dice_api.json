@@ -80,6 +80,7 @@
                "default_value" : -1
             }
     ],
+    "is_const": true,
     "prerequisites": ["wallet_open"]
 }
 
@@ -99,7 +100,8 @@
 ,
 {
    "type_name" : "dice_transaction_record",
-   "cpp_return_type" : "bts::blockchain::dice_transaction_record"
+        "cpp_include_file" : "bts/wallet/dice.hpp"
+   "cpp_return_type" : "bts::wallet::dice_transaction_record"
 },
 {
    "type_name" : "dice_transaction_record_array",
