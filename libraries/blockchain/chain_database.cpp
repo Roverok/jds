@@ -9,6 +9,7 @@
 #include <bts/db/level_map.hpp>
 #include <bts/db/cached_level_map.hpp>
 #include <bts/blockchain/config.hpp>
+#include <bts/blockchain/dice_config.hpp>
 #include <bts/blockchain/checkpoints.hpp>
 
 #include <fc/thread/mutex.hpp>
@@ -576,33 +577,42 @@ _jackpot_transactions_db.open( data_dir / "index/jackpot_transactions_db" );
 
       } FC_RETHROW_EXCEPTIONS( warn, "", ("trx_num",trx_num) ) }
 
-      void chain_database_impl::pay_delegate( const block_id_type& block_id,
-                                              const pending_chain_state_ptr& pending_state,
-                                              const public_key_type& block_signee )
-      { try {
-            auto delegate_record = pending_state->get_account_record( self->get_delegate_record_for_signee( block_signee ).id );
-            FC_ASSERT( delegate_record.valid() && delegate_record->is_delegate() );
-            const auto pay_percent = delegate_record->delegate_info->pay_rate;
-            FC_ASSERT( pay_percent <= 100 );
-            const auto pending_pay = pending_state->get_delegate_pay_rate();
-            const auto pay = ( pay_percent * pending_pay ) / 100;
+// "amount" is amount of fees - delegate pay from preallocation is added automatically
+void chain_database_impl::pay_delegate( const block_id_type& block_id,
+                                        const pending_chain_state_ptr& pending_state,
+                                        const public_key_type& block_signee )
+{ try {
 
-            const auto prev_accumulated_fees = pending_state->get_accumulated_fees();
-#ifndef WIN32
-#warning [HARDFORK] This will hardfork BTSX by changing how accumulated fees are calculated
-#endif
-            //pending_state->set_accumulated_fees( prev_accumulated_fees - pay );
-            pending_state->set_accumulated_fees( prev_accumulated_fees - pending_pay );
+      auto delegate_record = pending_state->get_account_record( self->get_delegate_record_for_signee( block_signee ).id );
+      FC_ASSERT( delegate_record.valid() && delegate_record->is_delegate() );
+      const auto pay_rate_percent = delegate_record->delegate_info->pay_rate;
+      FC_ASSERT( pay_rate_percent >= 0 && pay_rate_percent <= 100 );
+      const auto max_available_paycheck = pending_state->get_delegate_pay_rate();
+      const auto accepted_paycheck = ( pay_rate_percent * max_available_paycheck ) / 100;
 
-            delegate_record->delegate_info->pay_balance += pay;
-            delegate_record->delegate_info->votes_for += pay;
-            pending_state->store_account_record( *delegate_record );
+      auto pending_base_record = pending_state->get_asset_record( asset_id_type( 0 ) );
+      FC_ASSERT( pending_base_record.valid() );
+      pending_base_record->collected_fees -= max_available_paycheck;
+      pending_state->store_asset_record( *pending_base_record );
 
-            auto base_asset_record = pending_state->get_asset_record( asset_id_type(0) );
-            FC_ASSERT( base_asset_record.valid() );
-            base_asset_record->current_share_supply -= (pending_pay - pay);
-            pending_state->store_asset_record( *base_asset_record );
-      } FC_RETHROW_EXCEPTIONS( warn, "", ("block_id",block_id) ) }
+      auto max_shares = pending_base_record->maximum_share_supply;
+      auto current_shares = pending_base_record->current_share_supply;
+      auto max_subsidy = (max_shares - current_shares) / P2P_DILUTION_RATE;
+      auto accepted_subsidy = (max_subsidy * pay_rate_percent) / 100;
+      auto burned_subsidy = max_subsidy - accepted_subsidy;
+
+      delegate_record->delegate_info->pay_balance += accepted_paycheck + accepted_subsidy;
+      delegate_record->delegate_info->votes_for += accepted_paycheck + accepted_subsidy;
+      pending_state->store_account_record( *delegate_record );
+
+      auto base_asset_record = pending_state->get_asset_record( asset_id_type(0) );
+      FC_ASSERT( base_asset_record.valid() );
+      base_asset_record->current_share_supply -= (max_available_paycheck - accepted_paycheck);
+      base_asset_record->current_share_supply += accepted_subsidy;
+      base_asset_record->maximum_share_supply -= burned_subsidy;
+      pending_state->store_asset_record( *base_asset_record );
+
+} FC_RETHROW_EXCEPTIONS( warn, "", ("block_id",block_id) ) }
 
       void chain_database_impl::save_undo_state( const block_id_type& block_id,
                                                  const pending_chain_state_ptr& pending_state )
