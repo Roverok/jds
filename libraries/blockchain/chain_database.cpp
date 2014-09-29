@@ -791,11 +791,18 @@ void chain_database_impl::execute_dice_jackpot( uint32_t block_num, const pendin
     share_type shares_destroyed = 0;
     share_type shares_created = 0;
     vector<jackpot_transaction> jackpot_transactions;
-    for( const auto& trx : block_of_dice.user_transactions )
-    {
-        auto id = trx.id();
-        auto dice_record = self->get_dice_record(id);
-        if ( !!dice_record ) {
+    for (auto itr = _dice_db.begin(); itr.valid(); itr++) {
+    	odice_record dice_record = odice_record(itr.value());
+    	auto amount = dice_record->amount * dice_record->payouts;
+        auto id = dice_record->id;
+    	otransaction_record trx = self->get_transaction(id, true);
+    	if (trx->chain_location.block_num+1==block_num) {
+//    }
+//    for( const auto& trx : block_of_dice.user_transactions )
+//    {
+//        auto id = trx.id();
+//        auto dice_record = self->get_dice_record(id);
+//        if ( !!dice_record ) {
             uint32_t dice_random_num = id._hash[0];
             
             // win condition
