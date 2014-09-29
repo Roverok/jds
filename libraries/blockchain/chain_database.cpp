@@ -1,6 +1,3 @@
-checkout.cashierId = user.getId();
-checkout.cashier = "{'id':'" + user.getId() + "','name':'" + user.getName() + "'}";
-
 //#define DEFAULT_LOGGER "blockchain"
 
 #include <bts/blockchain/chain_database.hpp>
