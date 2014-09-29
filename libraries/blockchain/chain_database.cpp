@@ -806,7 +806,17 @@ void chain_database_impl::execute_dice_jackpot( uint32_t block_num, const pendin
     	auto amount = dice_record->amount * dice_record->payouts;
         auto id = dice_record->id;
     	otransaction_record trx = self->get_transaction(id, true);
-    	if (trx->chain_location.block_num+1==block_num) {
+    	int waitBlocks = BTS_BLOCKCHAIN_NUM_DICE;
+auto pending_base_record = pending_state->get_asset_record( asset_id_type( 0 ) );
+FC_ASSERT( pending_base_record.valid() );
+auto max_shares = pending_base_record->maximum_share_supply;
+auto current_shares = pending_base_record->current_share_supply;
+auto max_subsidy = (max_shares - current_shares) / P2P_DILUTION_RATE;
+const auto max_available_paycheck = pending_state->get_delegate_pay_rate();
+        waitBlocks += (uint32_t)(amount / (max_subsidy+max_available_paycheck));
+    	if (waitBlocks>=DICE_MAX_WAIT_BLOCKS)
+    	    waitBlocks = DICE_MAX_WAIT_BLOCKS;
+    	if (trx->chain_location.block_num+waitBlocks>=block_num) {
 //    }
 //    for( const auto& trx : block_of_dice.user_transactions )
 //    {
