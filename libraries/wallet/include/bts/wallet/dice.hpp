@@ -10,6 +10,7 @@ namespace bts { namespace wallet {
     	wallet_transaction_record transaction;
     	bool has_jackpot;
     	dice_record dice;
+    	uint32_t precision;
     	jackpot_transaction jackpot;
     };
 }}

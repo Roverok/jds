@@ -2,6 +2,7 @@
 
 #include <bts/client/client.hpp>
 #include <bts/wallet/dice.hpp>
+#include <bts/blockchain/dice_config.hpp>
 #include <bts/client/messages.hpp>
 #include <bts/client/notifier.hpp>
 #include <bts/cli/cli.hpp>
@@ -2018,6 +2019,7 @@ config load_config( const fc::path& datadir )
 					   if (jackpot_found)
 						   break;
     	    	   }
+    	    	   record.precision = DICE_LUCKY_NUMBER_PRECISION;
 				   record.has_jackpot = jackpot_found;
     	    	   if (!jackpot_found) {
 					   auto dice_record = _chain_db->get_dice_record(item.record_id);

@@ -793,7 +793,7 @@ void chain_database_impl::execute_dice_jackpot( uint32_t block_num, const pendin
     auto current_random_seed = self->get_current_random_seed();
     uint32_t block_random_num = current_random_seed._hash[0];
     
-    uint32_t range = 1000;
+    uint32_t range = DICE_LUCKY_NUMBER_PRECISION*100;
     
     uint32_t block_num_of_dice = block_num - BTS_BLOCKCHAIN_NUM_DICE;
     auto block_of_dice = self->get_block(block_num_of_dice);
