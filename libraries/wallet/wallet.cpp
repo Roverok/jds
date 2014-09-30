@@ -6293,7 +6293,9 @@ for( const auto& jackpot_trx : jackpot_trxs )
             auto entry = ledger_entry();
             entry.from_account = from_account_address;
             entry.to_account = from_account_address;
-            entry.memo = "play dice";
+            std::stringstream memo;
+            memo << "play dice " << payouts << "x";
+            entry.memo = memo.str();
 
             auto record = wallet_transaction_record();
             record.ledger_entries.push_back( entry );
