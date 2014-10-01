@@ -1,4 +1,6 @@
 #include <bts/blockchain/pending_chain_state.hpp>
+#include <bts/blockchain/dice_config.hpp>
+#include <algorithm>
 
 namespace bts { namespace blockchain {
 
@@ -71,7 +73,39 @@ namespace bts { namespace blockchain {
       {
          for( const auto& item : items.second )    prev_state->store_recent_operation( item );
       }
-      for ( const auto& item : dices )          prev_state->store_dice_record(item.second);
+	    share_type accumulated_dice_amount = 0;
+	       std::vector<dice_record> vals;
+	       vals.reserve(dices.size());
+
+	       for(auto kv : dices) {
+	           vals.push_back(kv.second);
+	       }
+
+	       const auto sorter = []( const dice_record& a, const dice_record& b ) -> bool
+	       {
+	           return a.amount < b.amount;
+	       };
+	       std::sort( vals.begin(), vals.end(), sorter );
+
+      for ( auto& dice : vals ) {
+    	  auto block_num = get_head_block_num();
+    	    	odice_record dice_record = odice_record(dice);
+    	    	auto amount = dice_record->amount * dice_record->payouts;
+    	        accumulated_dice_amount+= amount;
+    	    	int waitBlocks = BTS_BLOCKCHAIN_NUM_DICE;
+
+    	auto pending_base_record = get_asset_record( asset_id_type( 0 ) );
+    	FC_ASSERT( pending_base_record.valid() );
+    	auto max_shares = pending_base_record->maximum_share_supply;
+    	auto current_shares = pending_base_record->current_share_supply;
+    	auto max_subsidy = (max_shares - current_shares) / P2P_DILUTION_RATE;
+    	const auto max_available_paycheck = get_delegate_pay_rate();
+    	        waitBlocks += (uint32_t)(accumulated_dice_amount / (max_subsidy+max_available_paycheck));
+    	    	if (waitBlocks>=DICE_MAX_WAIT_BLOCKS)
+    	    	    waitBlocks = DICE_MAX_WAIT_BLOCKS;
+    	  dice.jackpot_block_num = block_num+waitBlocks;
+    	  prev_state->store_dice_record(dice);
+      }
 prev_state->set_jackpot_transactions( jackpot_transactions );
       prev_state->set_market_transactions( market_transactions );
       prev_state->set_dirty_markets(_dirty_markets);

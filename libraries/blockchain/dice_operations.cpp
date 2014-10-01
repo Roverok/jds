@@ -54,7 +54,6 @@ void dice_operation::evaluate( transaction_evaluation_state& eval_state )
     cur_record->owner            = this->owner();
     cur_record->payouts             = this->payouts;
     cur_record->roll_high             = this->roll_high;
-    
 
     eval_state._current_state->store_dice_record( *cur_record );
 
