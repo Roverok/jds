@@ -803,6 +803,7 @@ void chain_database_impl::execute_dice_jackpot( uint32_t block_num, const pendin
     vector<jackpot_transaction> jackpot_transactions;
     for (auto itr = _dice_db.begin(); itr.valid(); itr++) {
     	odice_record dice_record = odice_record(itr.value());
+    	auto target_block = dice_record->jackpot_block_num;
     	auto amount = dice_record->amount * dice_record->payouts;
         auto id = dice_record->id;
     	otransaction_record trx = self->get_transaction(id, true);

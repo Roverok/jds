@@ -18,5 +18,6 @@ FC_REFLECT( bts::wallet::dice_transaction_record,
            (transaction)
            (has_jackpot)
            (dice)
+           (precision)
            (jackpot)
            )
