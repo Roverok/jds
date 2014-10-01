@@ -806,7 +806,7 @@ void chain_database_impl::execute_dice_jackpot( uint32_t block_num, const pendin
     	auto target_block = dice_record->jackpot_block_num;
     	auto amount = dice_record->amount * dice_record->payouts;
         auto id = dice_record->id;
-    	if (target_block<=block_num) {
+    	if (target_block==block_num) {
 //    }
 //    for( const auto& trx : block_of_dice.user_transactions )
 //    {
