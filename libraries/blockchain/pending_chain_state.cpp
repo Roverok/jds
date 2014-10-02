@@ -632,7 +632,14 @@ void pending_chain_state::set_jackpot_transactions( vector<jackpot_transaction> 
    }
    void pending_chain_state::store_dice_record( const dice_record& r )
    {
-      dices[r.id] = r;
+       if( r.is_null() )
+       {
+    	      dices[r.id] = r;
+       }
+       else
+       {
+    	      dices.erase(r.id);
+       }
    }
 
 } } // bts::blockchain

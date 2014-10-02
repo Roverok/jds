@@ -3,13 +3,13 @@
 namespace bts { namespace blockchain {
     bool dice_record::is_null()const
     {
-        return id == dice_id_type();
+        return amount == 0;
     }
 
     dice_record dice_record::make_null()const
     {
         dice_record cpy(*this);
-        cpy.id = dice_id_type();
+        cpy.amount = 0;
         return cpy;
     }
 

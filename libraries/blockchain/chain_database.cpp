@@ -801,8 +801,8 @@ void chain_database_impl::execute_dice_jackpot( uint32_t block_num, const pendin
     share_type shares_destroyed = 0;
     share_type shares_created = 0;
     vector<jackpot_transaction> jackpot_transactions;
-    for (auto itr = _dice_db.begin(); itr.valid(); itr++) {
-    	odice_record dice_record = odice_record(itr.value());
+    for(auto kv : pending_state->dices) {
+    	odice_record dice_record = odice_record(kv.second);
     	auto target_block = dice_record->jackpot_block_num;
     	auto amount = dice_record->amount * dice_record->payouts;
         auto id = dice_record->id;
@@ -849,7 +849,7 @@ void chain_database_impl::execute_dice_jackpot( uint32_t block_num, const pendin
             shares_destroyed += dice_record->amount;
             // remove the dice_record from pending state after execute the jackpot
             pending_state->store_dice_record(dice_record->make_null());
-            self->store_dice_record(dice_record->make_null());
+//            self->store_dice_record(dice_record->make_null());
             jackpot_transaction jackpot_trx;
             jackpot_trx.play_owner = dice_record->owner;
             jackpot_trx.jackpot_owner = dice_record->owner;
