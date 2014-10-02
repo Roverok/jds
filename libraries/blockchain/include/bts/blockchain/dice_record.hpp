@@ -7,7 +7,7 @@ namespace bts { namespace blockchain {
 
     struct dice_record
     {
-        dice_record(){}
+        dice_record():jackpot_block_num(0){}
 
         bool is_null()const;
 

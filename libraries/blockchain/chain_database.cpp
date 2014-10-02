@@ -801,8 +801,11 @@ void chain_database_impl::execute_dice_jackpot( uint32_t block_num, const pendin
     share_type shares_destroyed = 0;
     share_type shares_created = 0;
     vector<jackpot_transaction> jackpot_transactions;
-    for(auto kv : pending_state->dices) {
+    unordered_map< dice_id_type, dice_record> dices = pending_state->dices;
+    for(auto kv : dices) {
     	odice_record dice_record = odice_record(kv.second);
+//    for (auto itr = _dice_db.begin(); itr.valid(); itr++) {
+//    	odice_record dice_record = odice_record(itr.value());
     	auto target_block = dice_record->jackpot_block_num;
     	auto amount = dice_record->amount * dice_record->payouts;
         auto id = dice_record->id;

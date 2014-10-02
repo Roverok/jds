@@ -87,8 +87,9 @@ namespace bts { namespace blockchain {
 	       };
 	       std::sort( vals.begin(), vals.end(), sorter );
 
+	  auto block_num = get_head_block_num();
       for ( auto& dice : vals ) {
-    	  auto block_num = get_head_block_num();
+    	  if (dice.jackpot_block_num==0) {
     	    	odice_record dice_record = odice_record(dice);
     	    	auto amount = dice_record->amount * dice_record->payouts;
     	        accumulated_dice_amount+= amount;
@@ -104,6 +105,7 @@ namespace bts { namespace blockchain {
     	    	if (waitBlocks>=DICE_MAX_WAIT_BLOCKS)
     	    	    waitBlocks = DICE_MAX_WAIT_BLOCKS;
     	  dice.jackpot_block_num = block_num+waitBlocks;
+    	  }
     	  prev_state->store_dice_record(dice);
       }
 prev_state->set_jackpot_transactions( jackpot_transactions );
