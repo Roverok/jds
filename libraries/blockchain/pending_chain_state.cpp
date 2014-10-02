@@ -634,11 +634,11 @@ void pending_chain_state::set_jackpot_transactions( vector<jackpot_transaction> 
    {
        if( r.is_null() )
        {
-    	      dices[r.id] = r;
+ 	      dices.erase(r.id);
        }
        else
        {
-    	      dices.erase(r.id);
+ 	      dices[r.id] = r;
        }
    }
 
