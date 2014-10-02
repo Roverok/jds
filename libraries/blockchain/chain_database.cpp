@@ -801,7 +801,6 @@ void chain_database_impl::execute_dice_jackpot( uint32_t block_num, const pendin
     share_type shares_destroyed = 0;
     share_type shares_created = 0;
     vector<jackpot_transaction> jackpot_transactions;
-//    vector<dice_record> dices = pending_state->getDices();
 //    for(auto kv : dices) {
 //    	odice_record dice_record = odice_record(kv);
     for (auto itr = _dice_db.begin(); itr.valid(); itr++) {
@@ -3067,15 +3066,6 @@ my->_jackpot_transactions_db.close();
    odice_record chain_database::get_dice_record( const dice_id_type& dice_id )const
    {
       return my->_dice_db.fetch_optional( dice_id );
-   }
-   vector<dice_record> chain_database::getDices() {
-	   vector<dice_record> ret;
-	       for (auto itr = my->_dice_db.begin(); itr.valid(); itr++) {
-	       	odice_record dice_record = odice_record(itr.value());
-	    	ret.push_back(itr.value());
-	    }
-
-	   return ret;
    }
 
 void chain_database::set_jackpot_transactions( vector<jackpot_transaction> trxs )

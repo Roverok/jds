@@ -637,14 +637,6 @@ void pending_chain_state::set_jackpot_transactions( vector<jackpot_transaction> 
            return prev_state->get_dice_record( dice_id );
        return odice_record();
    }
-   vector<dice_record> pending_chain_state::getDices() {
-	   vector<dice_record> ret;
-	    for(auto dice : dices) {
-	    	ret.push_back(dice.second);
-	    }
-
-	   return ret;
-   }
    void pending_chain_state::store_dice_record( const dice_record& r )
    {
 	  dices[r.id] = r;

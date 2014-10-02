@@ -177,7 +177,6 @@ virtual void                       set_jackpot_transactions( vector<jackpot_tran
          virtual asset                      calculate_base_supply()const                                    = 0;
          virtual odice_record               get_dice_record( const dice_id_type& id )const                  = 0;
          virtual void                       store_dice_record( const dice_record& r )                       = 0;
-         virtual vector<dice_record> getDices() =0;
    };
    typedef std::shared_ptr<chain_interface> chain_interface_ptr;
 
