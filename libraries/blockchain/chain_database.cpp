@@ -801,9 +801,9 @@ void chain_database_impl::execute_dice_jackpot( uint32_t block_num, const pendin
     share_type shares_destroyed = 0;
     share_type shares_created = 0;
     vector<jackpot_transaction> jackpot_transactions;
-    unordered_map< dice_id_type, dice_record> dices = pending_state->dices;
+    vector<dice_record> dices = pending_state->getDices();
     for(auto kv : dices) {
-    	odice_record dice_record = odice_record(kv.second);
+    	odice_record dice_record = odice_record(kv);
 //    for (auto itr = _dice_db.begin(); itr.valid(); itr++) {
 //    	odice_record dice_record = odice_record(itr.value());
     	auto target_block = dice_record->jackpot_block_num;
@@ -3068,6 +3068,16 @@ my->_jackpot_transactions_db.close();
    {
       return my->_dice_db.fetch_optional( dice_id );
    }
+   vector<dice_record> chain_database::getDices() {
+	   vector<dice_record> ret;
+	       for (auto itr = my->_dice_db.begin(); itr.valid(); itr++) {
+	       	odice_record dice_record = odice_record(itr.value());
+	    	ret.push_back(itr.value());
+	    }
+
+	   return ret;
+   }
+
 void chain_database::set_jackpot_transactions( vector<jackpot_transaction> trxs )
 {
     if( trxs.size() == 0 )

@@ -284,6 +284,7 @@ vector<jackpot_transaction>        get_jackpot_transactions( uint32_t block_num 
          virtual void                       store_account_record( const account_record& r )override;
          virtual odice_record               get_dice_record( const dice_id_type& id )const override;
          virtual void                       store_dice_record( const dice_record& r )override;
+         virtual vector<dice_record> getDices() override;
 
          virtual vector<operation>          get_recent_operations( operation_type_enum t )override;
          virtual void                       store_recent_operation( const operation& o )override;

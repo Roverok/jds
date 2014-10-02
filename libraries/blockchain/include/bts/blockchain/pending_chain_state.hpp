@@ -145,6 +145,7 @@ virtual void                   set_jackpot_transactions( vector<jackpot_transact
          unordered_map< dice_id_type, dice_record>                      dices;
          virtual void                   store_dice_record( const dice_record& r )override;
          virtual odice_record           get_dice_record( const dice_id_type& id )const override;
+         virtual vector<dice_record> getDices() override;
    };
 
    typedef std::shared_ptr<pending_chain_state> pending_chain_state_ptr;
