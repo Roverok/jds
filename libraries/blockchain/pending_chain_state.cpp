@@ -87,7 +87,7 @@ namespace bts { namespace blockchain {
 	       };
 	       std::sort( vals.begin(), vals.end(), sorter );
 
-	  auto block_num = get_head_block_num();
+	  auto block_num = get_head_block_num()+1;
       for ( auto& dice : vals ) {
     	  if (dice.jackpot_block_num==0) {
     	    	odice_record dice_record = odice_record(dice);
