@@ -243,6 +243,11 @@ prev_state->set_jackpot_transactions( jackpot_transactions );
          if( prev_value ) undo_state->set_feed( *prev_value );
          else undo_state->set_feed( feed_record{item.first} );
       }
+      for ( const auto& item : dices ) {
+          auto prev_value = prev_state->get_dice_record(item.first);
+          if( !! prev_state ) undo_state->store_dice_record( *prev_value );
+          else undo_state->store_dice_record( item.second.make_null() );
+      }
 
       auto dirty_markets = prev_state->get_dirty_markets();
       undo_state->set_dirty_markets(dirty_markets);
