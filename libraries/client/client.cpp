@@ -1991,7 +1991,19 @@ config load_config( const fc::path& datadir )
     	      vector<dice_transaction_record> history;
     	      vector<wallet_transaction_record> tx_history = _wallet->get_transaction_history(account_name, start_block_num, end_block_num, asset_symbol);
     	      vector<wallet_transaction_record> pending = _wallet->get_pending_transactions();
-    	      tx_history.insert(tx_history.end(), pending.begin(), pending.end());
+                for (auto tx : pending) {
+                    bool found = false;
+                    for (auto history : tx_history) {
+                        if (history.record_id == tx.record_id){
+                            found=true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        tx_history.push_back(tx);
+                    }
+                }
+//    	      tx_history.insert(tx_history.end(), pending.begin(), pending.end());
     	       const auto sorter = []( const wallet_transaction_record& a, const wallet_transaction_record& b ) -> bool
     	       {
     	           if( a.received_time != b.received_time)
@@ -2006,9 +2018,17 @@ config load_config( const fc::path& datadir )
     	    	   record.transaction = item;
     	    	   if (item.is_virtual)
     	    		   continue;
+const auto trx_rec = _chain_db->get_transaction( item.record_id );
+if( trx_rec.valid() )
+{
+    record.transaction.block_num = trx_rec->chain_location.block_num;
+
+    record.transaction.is_confirmed = true;
+}
+    	    		   
     	    	   bool jackpot_found = false;
-    	    	   for (int block_index = 0 ; block_index<BTS_BLOCKCHAIN_NUM_DELEGATES*2;block_index++){
-					   vector<jackpot_transaction> jackpots = _chain_db->get_jackpot_transactions(item.block_num+BTS_BLOCKCHAIN_NUM_DICE+block_index);
+    	    	   for (uint32_t block_index = 0 ; block_index<BTS_BLOCKCHAIN_NUM_DELEGATES*2;block_index++){
+					   vector<jackpot_transaction> jackpots = _chain_db->get_jackpot_transactions(record.transaction.block_num+BTS_BLOCKCHAIN_NUM_DICE+block_index);
 					   for (const auto& jackpot : jackpots) {
 						   if (jackpot.dice_transaction_id == item.record_id) {
 							   jackpot_found = true;
@@ -2025,7 +2045,8 @@ config load_config( const fc::path& datadir )
 					   auto dice_record = _chain_db->get_dice_record(item.record_id);
 					   if ( !dice_record )
 						   continue;
-					   record.dice = *dice_record;
+					    else
+					        record.dice = *dice_record;
     	    	   }
     	    	   history.push_back( record );
     	       }
