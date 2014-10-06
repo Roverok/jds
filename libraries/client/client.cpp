@@ -2008,7 +2008,7 @@ config load_config( const fc::path& datadir )
     	    		   continue;
     	    	   bool jackpot_found = false;
     	    	   for (int block_index = 0 ; block_index<BTS_BLOCKCHAIN_NUM_DELEGATES*2;block_index++){
-					   vector<jackpot_transaction> jackpots = _chain_db->get_jackpot_transactions(item.block_num+BTS_BLOCKCHAIN_NUM_DICE);
+					   vector<jackpot_transaction> jackpots = _chain_db->get_jackpot_transactions(item.block_num+BTS_BLOCKCHAIN_NUM_DICE+block_index);
 					   for (const auto& jackpot : jackpots) {
 						   if (jackpot.dice_transaction_id == item.record_id) {
 							   jackpot_found = true;
