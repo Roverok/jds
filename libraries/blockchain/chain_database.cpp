@@ -773,7 +773,10 @@ void chain_database_impl::pay_delegate( const block_id_type& block_id,
 
              auto active_del = self->next_round_active_delegates();
              auto rand_seed = fc::sha256::hash(self->get_current_random_seed());
-             size_t num_del = active_del.size();
+             uint32_t block_index = block_data.block_num % BTS_BLOCKCHAIN_NUM_DELEGATES / 2;
+             size_t num_del = active_del.size()-block_index;
+             if (block_index!=0)
+                std::swap( active_del[0], active_del[num_del-block_index] );
              for( uint32_t i = 0; i < num_del; ++i )
              {
                 for( uint32_t x = 0; x < 4 && i < num_del; ++x, ++i )
