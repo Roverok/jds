@@ -733,7 +733,7 @@ void chain_database_impl::pay_delegate( const block_id_type& block_id,
                  required_confirmations += 2 )
           {
               /* Note: Active delegate list has not been updated yet so we can use the timestamp */
-              delegate_id = self->get_slot_signee( block_timest amp, active_delegates ).id;
+              delegate_id = self->get_slot_signee( block_timestamp, active_delegates ).id;
               delegate_record = pending_state->get_account_record( delegate_id );
               FC_ASSERT( delegate_record.valid() && delegate_record->is_delegate() );
 
