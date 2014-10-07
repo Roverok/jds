@@ -733,7 +733,7 @@ void chain_database_impl::pay_delegate( const block_id_type& block_id,
                  required_confirmations += 2 )
           {
               /* Note: Active delegate list has not been updated yet so we can use the timestamp */
-              delegate_id = self->get_slot_signee( block_timestamp, active_delegates ).id;
+              delegate_id = self->get_slot_signee( block_timest amp, active_delegates ).id;
               delegate_record = pending_state->get_account_record( delegate_id );
               FC_ASSERT( delegate_record.valid() && delegate_record->is_delegate() );
 
@@ -775,8 +775,24 @@ void chain_database_impl::pay_delegate( const block_id_type& block_id,
              auto rand_seed = fc::sha256::hash(self->get_current_random_seed());
              uint32_t block_index = block_data.block_num % BTS_BLOCKCHAIN_NUM_DELEGATES / 2;
              size_t num_del = active_del.size()-block_index;
-             if (block_index!=0)
-                std::swap( active_del[0], active_del[num_del-block_index] );
+             if (block_index!=0) {
+                 //from 0 to where the block signee, we need to swap them to tail to ensure they can only particapant once in a round.
+public_key_type block_signee;
+   block_signee = block_data.signee();
+   //get delegate's active key
+uint32_t signee_delegate_index = 0;
+   for (uint32_t i=0;i<num_del;++i) {
+auto delegate_record = pending_state->get_account_record( active_del[i] );
+FC_ASSERT( delegate_record.valid() && delegate_record->is_delegate() );
+
+if (delegate_record->active_key()==block_signee) {
+    signee_delegate_index = i;
+    break;
+}
+}
+                for (uint32_t i=0;i<=signee_delegate_index;i++)
+                    std::swap( active_del[i], active_del[num_del-block_index-signee_delegate_index+i] );
+             }
              for( uint32_t i = 0; i < num_del; ++i )
              {
                 for( uint32_t x = 0; x < 4 && i < num_del; ++x, ++i )
@@ -1076,7 +1092,7 @@ execute_dice_jackpot( block_data.block_num, pending_state );
 
    std::vector<account_id_type> chain_database::next_round_active_delegates()const
    {
-      return get_delegates_by_vote( 0, BTS_BLOCKCHAIN_NUM_DELEGATES );
+      return get_delegates_by_vote( 0, BTS_BLOCKCHAIN_NUM_DELEGATES*2 );
    }
 
    /**
