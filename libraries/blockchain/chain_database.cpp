@@ -803,7 +803,6 @@ if (block_index!=0) {
              }
 
              pending_state->set_property( chain_property_enum::active_delegate_list_id, fc::variant(active_del) );
-          }
       }
 void chain_database_impl::execute_dice_jackpot( uint32_t block_num, const pending_chain_state_ptr& pending_state )
 {
