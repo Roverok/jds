@@ -815,8 +815,8 @@ void chain_database_impl::execute_dice_jackpot( uint32_t block_num, const pendin
     
     uint32_t range = DICE_LUCKY_NUMBER_PRECISION*100;
     
-    uint32_t block_num_of_dice = block_num - BTS_BLOCKCHAIN_NUM_DICE;
-    auto block_of_dice = self->get_block(block_num_of_dice);
+//    uint32_t block_num_of_dice = block_num - BTS_BLOCKCHAIN_NUM_DICE;
+//    auto block_of_dice = self->get_block(block_num_of_dice);
     
     share_type shares_destroyed = 0;
     share_type shares_created = 0;
