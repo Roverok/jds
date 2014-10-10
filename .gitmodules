@@ -7,6 +7,7 @@
 [submodule "programs/web_wallet"]
 	path = programs/web_wallet
 	url = https://github.com/zhangweis/dice_web_wallet.git
+        branch = master
 [submodule "programs/qt_wallet"]
 	path = programs/qt_wallet
 	url = https://github.com/BitShares/qt_wallet.git
@@ -14,7 +15,3 @@
 	path = libraries/leveldb
 	url = https://github.com/bitcoin/leveldb.git
     ignore = dirty
-[submodule "dice_web_wallet"]
-	path = dice_web_wallet
-	url = https://github.com/zhangweis/dice_web_wallet.git
-	branch = master
