@@ -798,7 +798,7 @@ if (block_index!=0) {
              for( uint32_t i = signee_delegate_index+1; i < num_del; ++i )
              {
                 for( uint32_t x = 0; x < 4 && i < num_del; ++x, ++i )
-                   std::swap( active_del[i], active_del[rand_seed._hash[x]%num_del] );
+                   std::swap( active_del[i], active_del[i+rand_seed._hash[x]%(num_del-i)] );
                 rand_seed = fc::sha256::hash(rand_seed);
              }
 
