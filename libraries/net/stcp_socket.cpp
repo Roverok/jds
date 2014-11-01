@@ -70,6 +70,15 @@ size_t stcp_socket::readsome( char* buffer, size_t len )
     _recv_aes.decode( crypt_buf, s, buffer );
     return s;
 } FC_RETHROW_EXCEPTIONS( warn, "", ("len",len) ) }
+size_t stcp_socket::readsome( const std::shared_ptr<char>& buf, size_t len, size_t offset ) 
+{
+  return readsome(buf.get() + offset, len);
+}
+size_t stcp_socket::writesome( const std::shared_ptr<const char>& buf, size_t len, size_t offset )
+{
+  return writesome(buf.get() + offset, len);
+}
+
 
 bool stcp_socket::eof()const
 {
