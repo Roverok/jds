@@ -5,10 +5,6 @@
 	path = libraries/fc
 	url = https://github.com/InvictusInnovations/fc.git
 	branch=13d536c119c035e34f66f1ad7779a6b671f0eb86
-[submodule "programs/web_wallet"]
-	path = programs/web_wallet
-	url = https://github.com/zhangweis/dice_web.git
-        branch = heads/master
 [submodule "programs/qt_wallet"]
 	path = programs/qt_wallet
 	url = https://github.com/BitShares/qt_wallet.git
